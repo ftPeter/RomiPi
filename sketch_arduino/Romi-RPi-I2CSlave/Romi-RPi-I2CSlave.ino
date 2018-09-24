@@ -2,7 +2,7 @@
 #include <Romi32U4.h>
 #include <PololuRPiSlave.h>
 
-#define ROMI_FIRMWARE_VERSION (11)
+#define ROMI_FIRMWARE_VERSION (12)
 
 /* This example program shows how to make the Romi 32U4 Control Board
    into a Raspberry Pi I2C slave.  The RPi and Romi 32U4 Control Board can
@@ -29,28 +29,57 @@
 // data format, make sure to update the corresponding code in
 // a_star.py on the Raspberry Pi.
 
+// NeoPixel Setup Materials
+// NeoPixel Ring simple sketch (c) 2013 Shae Erisson
+// released under the GPLv3 license to match the rest of the AdaFruit NeoPixel library
+
+#include <Adafruit_NeoPixel.h>
+#ifdef __AVR__
+  #include <avr/power.h>
+#endif
+
+// Which pin on the Arduino is connected to the NeoPixels?
+// On a Trinket or Gemma we suggest changing this to 1
+#define PIN            1
+
+// How many NeoPixels are attached to the Arduino?
+#define NUMPIXELS      1
+
+// When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
+// Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
+// example for more information on possible values.
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+
+int delayval = 500; // delay for half a second
+
+// end NeoPixel Setup
+
 struct Data
 {
   uint8_t romi_fw_version = ROMI_FIRMWARE_VERSION; // 0
   bool green, red; // 1,2
   bool buttonA, buttonB, buttonC; // 3,4,5
 
-  float left_vel_target_meter_per_sec, right_vel_target_meter_per_sec; // 6,7,8,9, 10,11,12,13
-  uint16_t analog[4]; // 14,15, 16,17, 18,19, 20,21
+  int16_t left_vel_target_meter_per_sec, right_vel_target_meter_per_sec; // 6,7,8,9, 10,11,12,13
+  //uint16_t analog[4]; // 14,15, 16,17, 18,19, 20,21
 
-  bool resetEncoders; // 24
-  bool fillSpace; // 25
-  int16_t leftEncoder, rightEncoder; // 26,27, 28,29
+  bool resetEncoders; // 14
+  bool yellow; // 15
+  int16_t leftEncoder, rightEncoder; // 16,17, 18,19
 
-  float pose_x, pose_y;     // 30,31,32,33, 34,35,36,37,
-  float pose_quat_z, pose_quat_w;   // 38,39,40,41, 42,43,44,45,
-  float pose_twist_linear_x, pose_twist_angle_z; //  46,47,48,49, 50,51,52,53,
-  uint16_t batteryMillivolts;  // 54,55
-  bool yellow; // 56
+  float pose_x, pose_y;     // 20,21,22,23, 24,25,26,27,
+  float pose_quat_z, pose_quat_w;   // 28,29,30,31, 32,33,34,35,
+  float pose_twist_linear_x, pose_twist_angle_z; //  43,37,38,39, 40,41,42,43,
+  uint16_t batteryMillivolts;  // 44,45
+  
 
 };
 
-PololuRPiSlave<struct Data, 20> slave;
+
+// PololuRPiSlave<BufferType, pi_delay_us>
+// NOTE: the 20 us delay here and the address of 20 below 
+//       are just a coincidence, not a typo.
+PololuRPiSlave<struct Data, 20> slave; 
 PololuBuzzer buzzer;
 Romi32U4Motors motors;
 Romi32U4ButtonA buttonA;
@@ -84,6 +113,13 @@ void setup()
 
   // Play startup sound.
   buzzer.play("v10>>g16>>>c16");
+
+  pixels.begin(); // This initializes the NeoPixel library.
+  for(int i = 0; i < 150; i++) {
+    pixels.setPixelColor(0, pixels.Color(i,i,i));
+    pixels.show();
+    delay(10);
+  }
 }
 
 void loop()
@@ -119,17 +155,35 @@ void loop()
 
   // Change this to readBatteryMillivoltsLV() for the LV model.
   // slave.buffer.batteryMillivolts = readBatteryMillivolts();
-
+  /*
   for (uint8_t i = 0; i < 4; i++)
   {
     slave.buffer.analog[i] = analogRead(i);
   }
+  */
 
   // READING the buffer is allowed before or after finalizeWrites().
   ledYellow(slave.buffer.yellow);
   ledGreen(slave.buffer.green);
   ledRed(slave.buffer.red);
 
+  if (slave.buffer.green) {
+    pixels.setPixelColor(0, pixels.Color(0,150,0));
+    pixels.show();
+  }
+  if (slave.buffer.yellow) {
+    pixels.setPixelColor(0, pixels.Color(150,150,0));
+    pixels.show();
+  }
+  if (slave.buffer.red) {
+    pixels.setPixelColor(0, pixels.Color(150,0,0));
+    pixels.show();
+  }
+  if(not(slave.buffer.green and slave.buffer.yellow and slave.buffer.red)) {
+    pixels.setPixelColor(0, pixels.Color(0,0,0));
+    pixels.show();
+  }
+    
   slave.buffer.leftEncoder = encoders.getCountsLeft();
   slave.buffer.rightEncoder = encoders.getCountsRight();
 
@@ -140,8 +194,10 @@ void loop()
     slave.buffer.rightEncoder  = encoders.getCountsAndResetRight();
   }
 
+  
   if ( everyNmillisec(10) ) {
     // ODOMETRY
+    /*
     calculateOdom();
     slave.buffer.pose_x              = pose_x_m;
     slave.buffer.pose_y              = pose_y_m;
@@ -149,15 +205,19 @@ void loop()
     slave.buffer.pose_quat_w         = pose_quat_w_unitless;
     slave.buffer.pose_twist_linear_x = pose_twist_linear_x_m_per_s;
     slave.buffer.pose_twist_angle_z  = pose_twist_angle_z_rad_per_s;
+    */
 
-    left_vel_target_meter_per_sec  = slave.buffer.left_vel_target_meter_per_sec;
-    right_vel_target_meter_per_sec = slave.buffer.right_vel_target_meter_per_sec;
+    slave.buffer.left_vel_target_meter_per_sec = left_wheel_velocity_target();
+    slave.buffer.right_vel_target_meter_per_sec  = right_wheel_velocity_target();
     doPID();
   }
+  
 
+  /*
   if ( every100millisec() ) {
     debug_motors();
   }
+  */
 
   // When you are done WRITING, call finalizeWrites() to make modified
   // data available to I2C master.
