@@ -1,5 +1,13 @@
 #!/usr/bin/python3
 #
+# Notes:
+# read_unpack, write_pack types quick reference
+# https://docs.python.org/3.6/library/struct.html#format-characters
+# ? - bool           - 1
+# B - unsigned char  - 1
+# h - short          - 2
+# H - unsigned short - 2
+#
 # Copyright Pololu Corporation.  For more information, see https://www.pololu.com/
 
 import smbus
@@ -73,29 +81,39 @@ class AStar(HWBase):
             break
         time.sleep(0.0001)
 
+    def twist(self, linear_x_m_s, angular_z_rad_s):
+        self.write_pack(33, 'f', linear_x_m_s)
+        self.write_pack(40, 'f', angular_z_rad_s)
+
     def leds(self, red, yellow, green):
-        self.write_pack(1, 'BB', green, red)
-        self.write_pack(30, 'B', yellow)
+        self.write_pack(1, '??', green, red)
+        self.write_pack(15, '?', yellow)
 
     def motors(self, left, right):
-        left  = self.flip_left_motor * left
-        right = self.flip_right_motor * right
+        print("ERROR, to set motor speed, use twist instead")
+        print("       in future, this class should not inherit")
+        print("       the legacy romi HWBase")
+        return (0, 0)
+
+    def read_motors(self):
         if self.swap_motors:
-            self.write_pack(6, 'hh', left, right)
+            left, right = self.read_unpack(6, 8, 'ff')
         else:
-            self.write_pack(6, 'hh', right, left)
+            right,left = self.read_unpack(6, 8, 'ff')
+        return (left, right)
 
     def read_buttons(self):
         return self.read_unpack(3, 3, "???")
 
     def read_battery_millivolts(self):
-        return self.read_unpack(10, 2, "H")[0]
+        return self.read_unpack(44, 2, "H")[0]
 
     def read_analog(self):
-        return self.read_unpack(12, 12, "HHHHHH")
+        print ("ERR: disabled")
+        return ()
 
     def read_encoders(self):
-        encoder_values = self.read_unpack(26, 4, 'hh')
+        encoder_values = self.read_unpack(16, 4, 'hh')
         if( encoder_values is None ):
             return (None,None)
         elif self.swap_encoders:
@@ -108,7 +126,7 @@ class AStar(HWBase):
         return self.read_unpack(0, 1, 'B')[0]
 
     def reset_encoders(self):
-        self.write_pack(24, 'B', 1)
+        self.write_pack(14, '?', 1)
 
 # Self Test
 if __name__ == '__main__':
@@ -117,31 +135,8 @@ if __name__ == '__main__':
     print("Firmware Version: ", romi.read_firmware_version() )
     print("Battery:          ", romi.read_battery_millivolts(), " mV")
     print("Encoders (l,r):  ", romi.read_encoders() )
-    print( romi.read_raw(30) )
-    romi.leds( True, True, True )
-    print("Motors(100,0); sleep(1.0)")
-    romi.motors(100, 0)
-    time.sleep(1.0)
-    romi.motors(0, 0)
-    print("Encoders (l,r):  ", romi.read_encoders() )
-    romi.leds( False, False, False)
-    print("Motors(0,100); sleep(1.0)")
-    romi.motors(0, 100)
-    time.sleep(1.0)
-    romi.motors(0, 0)
-    print("Encoders (l,r):  ", romi.read_encoders() )
-    print("Motors(-100,0); sleep(1.0)")
-    romi.motors(-100, 0)
-    time.sleep(1.0)
-    romi.motors(0, 0)
-    print("Encoders (l,r):  ", romi.read_encoders() )
-    romi.leds( False, False, False)
-    print("Motors(0,-100); sleep(1.0)")
-    romi.motors(0, -100)
-    time.sleep(1.0)
-    romi.motors(0, 0)
-    print("Encoders (l,r):  ", romi.read_encoders() )
-
+    romi.twist(0.5, 0.0)
     while True:
         print("Encoders (l,r):  ", romi.read_encoders() )
+        print("Motor Targets (l,r):", romi.read_motors() )
         time.sleep(0.5)
