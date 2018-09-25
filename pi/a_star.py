@@ -86,8 +86,7 @@ class AStar(HWBase):
         self.write_pack(40, 'f', angular_z_rad_s)
 
     def leds(self, red, yellow, green):
-        self.write_pack(1, '??', green, red)
-        self.write_pack(15, '?', yellow)
+        self.write_pack(1, '???', green, red, yellow)
 
     def motors(self, left, right):
         print("ERROR, to set motor speed, use twist instead")
