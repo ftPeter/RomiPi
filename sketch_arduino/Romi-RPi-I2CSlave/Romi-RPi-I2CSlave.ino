@@ -43,7 +43,7 @@
 #define PIN            1
 
 // How many NeoPixels are attached to the Arduino?
-#define NUMPIXELS      1
+#define NUMPIXELS      2
 
 // When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
@@ -57,21 +57,22 @@ int delayval = 500; // delay for half a second
 struct Data
 {
   uint8_t romi_fw_version = ROMI_FIRMWARE_VERSION; // 0
-  bool green, red; // 1,2
-  bool buttonA, buttonB, buttonC; // 3,4,5
+  bool green, red, yellow; // 1,2,3
+  bool buttonB, buttonC; // 3,4,5
 
   int16_t left_vel_target_meter_per_sec, right_vel_target_meter_per_sec; // 6,7,8,9, 10,11,12,13
   //uint16_t analog[4]; // 14,15, 16,17, 18,19, 20,21
 
   bool resetEncoders; // 14
-  bool yellow; // 15
+  bool fillerBool; // 15
+
   int16_t leftEncoder, rightEncoder; // 16,17, 18,19
 
   float pose_x, pose_y;     // 20,21,22,23, 24,25,26,27,
   float pose_quat_z, pose_quat_w;   // 28,29,30,31, 32,33,34,35,
   float pose_twist_linear_x, pose_twist_angle_z; //  43,37,38,39, 40,41,42,43,
   uint16_t batteryMillivolts;  // 44,45
-  
+  bool buttonA; // 46
 
 };
 
@@ -169,18 +170,19 @@ void loop()
 
   if (slave.buffer.green) {
     pixels.setPixelColor(0, pixels.Color(0,150,0));
+    pixels.setPixelColor(1, pixels.Color(0,150,0));
     pixels.show();
-  }
-  if (slave.buffer.yellow) {
+  } else if (slave.buffer.yellow) {
     pixels.setPixelColor(0, pixels.Color(150,150,0));
+    pixels.setPixelColor(1, pixels.Color(150,150,0));
     pixels.show();
-  }
-  if (slave.buffer.red) {
+  } else if (slave.buffer.red) {
     pixels.setPixelColor(0, pixels.Color(150,0,0));
+    pixels.setPixelColor(1, pixels.Color(150,0,0));
     pixels.show();
-  }
-  if(not(slave.buffer.green and slave.buffer.yellow and slave.buffer.red)) {
+  } else {
     pixels.setPixelColor(0, pixels.Color(0,0,0));
+    pixels.setPixelColor(1, pixels.Color(0,0,0));
     pixels.show();
   }
     
