@@ -88,6 +88,10 @@ class AStar(HWBase):
     def leds(self, red, yellow, green):
         self.write_pack(1, '???', green, red, yellow)
 
+    def pixels(self, red, green, blue):
+        print("writing: ", red, green, blue)
+        self.write_pack(4, 'BBB', red, green, blue)
+
     def motors(self, left, right):
         print("ERROR, to set motor speed, use twist instead")
         print("       in future, this class should not inherit")
@@ -102,17 +106,17 @@ class AStar(HWBase):
         return (left, right)
 
     def read_buttons(self):
-        return self.read_unpack(3, 3, "???")
+        return self.read_unpack(7, 3, "???")
 
     def read_battery_millivolts(self):
-        return self.read_unpack(44, 2, "H")[0]
+        return self.read_unpack(10, 2, "H")[0]
 
     def read_analog(self):
         print ("ERR: disabled")
         return ()
 
     def read_encoders(self):
-        encoder_values = self.read_unpack(16, 4, 'hh')
+        encoder_values = self.read_unpack(13, 4, 'hh')
         if( encoder_values is None ):
             return (None,None)
         elif self.swap_encoders:
@@ -125,7 +129,8 @@ class AStar(HWBase):
         return self.read_unpack(0, 1, 'B')[0]
 
     def reset_encoders(self):
-        self.write_pack(14, '?', 1)
+        # set the reset bit high
+        self.write_pack(12, '?', 1)
 
 # Self Test
 if __name__ == '__main__':
