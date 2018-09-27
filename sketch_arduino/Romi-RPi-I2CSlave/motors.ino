@@ -42,16 +42,25 @@ float right_wheel_velocity() {
   return average;
 }
 
-float left_wheel_velocity_target() {
+float get_left_wheel_velocity_target() {
   // target left wheel velocity
   // in meters per second
   return left_vel_target_meter_per_sec;
 }
 
-float right_wheel_velocity_target() {
+float get_right_wheel_velocity_target() {
   // target left wheel velocity
   // in meters per second
   return right_vel_target_meter_per_sec;
+}
+
+void set_twist_target(float linear_m_s, float angle_rad_s) {
+  // convert twist input from pi to motor velocities.
+  // TODO unsure if this is correct, double check unit analysis
+  float wheel_dist_m = 0.14;
+  
+  right_vel_target_meter_per_sec = (angle_rad_s * wheel_dist_m * 100.0) / 2.0 + linear_m_s;
+  left_vel_target_meter_per_sec = (linear_m_s * 2.0) - right_vel_target_meter_per_sec;
 }
 
 void doPID() {
@@ -72,8 +81,8 @@ void doPID() {
   float duration_s = 1000.0 * float(duration_ms);
 
   /* CALCULATE ERROR */
-  float left_error  = left_wheel_velocity_target() - left_wheel_velocity();
-  float right_error = right_wheel_velocity_target() - right_wheel_velocity();
+  float left_error  = get_left_wheel_velocity_target() - left_wheel_velocity();
+  float right_error = get_right_wheel_velocity_target() - right_wheel_velocity();
 
   /* CALCULATE PID */
   left_integral  = left_integral  + (left_error * duration_s);
@@ -101,15 +110,15 @@ void doPID() {
     right_integral  = right_integral - (right_error * duration_s);
   }
 
-  if ( left_wheel_velocity_target() == 0.0 ) {
+  if ( get_left_wheel_velocity_target() == 0.0 ) {
     left_motor = 0;
   }
-  if ( right_wheel_velocity_target() == 0.0 ) {
+  if ( get_right_wheel_velocity_target() == 0.0 ) {
     right_motor = 0;
   }
 
   /* SET THE MOTORS */
-  motors.setSpeeds(left_motor, right_motor);
+  //motors.setSpeeds(left_motor, right_motor);
   
   // update previous values
   prev_time_ms = current_time_ms;
@@ -122,11 +131,11 @@ void debug_motors() {
   Serial.print("left");
   Serial.print(" pow "); Serial.print(left_motor);
   Serial.print(", inst_v "); Serial.print(left_wheel_velocity());
-  Serial.print(", target_v "); Serial.print(left_wheel_velocity_target());
+  Serial.print(", target_v "); Serial.print(get_left_wheel_velocity_target());
   Serial.print(" right");
   Serial.print(" pow "); Serial.print(right_motor);
   Serial.print(", inst_v "); Serial.print(right_wheel_velocity());
-  Serial.print(", target_v "); Serial.print(right_wheel_velocity_target());
+  Serial.print(", target_v "); Serial.print(get_right_wheel_velocity_target());
   Serial.println();
 }
 

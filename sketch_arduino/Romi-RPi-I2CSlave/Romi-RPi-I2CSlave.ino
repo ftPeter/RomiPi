@@ -58,22 +58,26 @@ int delayval = 500; // delay for half a second
 struct Data
 {
   uint8_t romi_fw_version = ROMI_FIRMWARE_VERSION; // 0
-  uint8_t red, green, blue; // 1,2,3
-  bool buttonB, buttonC; // 3,4,5
+  bool led_green, led_red, led_yellow; // 1,2,3
+  uint8_t pixel_red, pixel_green, pixel_blue; // 4,5,6
+  bool buttonA, buttonB, buttonC; // 7,8,9
+  uint16_t batteryMillivolts;  // 10,11
 
-  int16_t left_vel_target_meter_per_sec, right_vel_target_meter_per_sec; // 6,7,8,9, 10,11,12,13
-  //uint16_t analog[4]; // 14,15, 16,17, 18,19, 20,21
+  //uint16_t analog[4];
 
-  bool resetEncoders; // 14
-  bool fillerBool; // 15
+  // encoders sent to PI
+  bool resetEncoders; // 12
+  int16_t leftEncoder, rightEncoder; // 13,14,  15,16
 
-  int16_t leftEncoder, rightEncoder; // 16,17, 18,19
-
+  // pose state sent to PI
   float pose_x, pose_y;     // 20,21,22,23, 24,25,26,27,
   float pose_quat_z, pose_quat_w;   // 28,29,30,31, 32,33,34,35,
-  float pose_twist_linear_x, pose_twist_angle_z; //  43,37,38,39, 40,41,42,43,
-  uint16_t batteryMillivolts;  // 44,45
-  bool buttonA; // 46
+  float pose_twist_linear_x, pose_twist_angle_z; //  43,37,38,39, 40,41,42,43
+  float pose_left_vel_target_meter_per_sec, pose_right_vel_target_meter_per_sec; // 6,7,8,9, 10,11,12,13
+  
+  // twist setting from PI
+  float twist_linear_x, twist_angle_z; // 47, 48
+  
 };
 
 
@@ -107,6 +111,10 @@ float left_vel_target_meter_per_sec  = 0.0;
 float right_vel_target_meter_per_sec = 0.0;
 int16_t left_motor, right_motor;
 
+/* TWIST CONTROL INPUT */
+float twist_linear_x = 0.0;
+float twist_angle_z = 0.0;
+
 void setup()
 {
   // Set up the slave at I2C address 20.
@@ -133,6 +141,11 @@ void loop()
   // data including recent master writes.
   slave.updateBuffer();
 
+  // set twist sent from Raspberry Pi
+  twist_linear_x = slave.buffer.pose_twist_linear_x;
+  twist_angle_z  = slave.buffer.pose_twist_angle_z;
+  set_twist_target(twist_linear_x, twist_angle_z);
+
   // Write various values into the data structure.
   slave.buffer.buttonA = buttonA.isPressed();
   slave.buffer.buttonB = buttonB.isPressed();
@@ -143,11 +156,16 @@ void loop()
 
   // READING the buffer is allowed before or after finalizeWrites().
 
+  // update LED signals
+  ledYellow(slave.buffer.led_yellow);
+  ledGreen(slave.buffer.led_green);
+  ledRed(slave.buffer.led_red);
+  
   // update pixel colors
   for (int i=0; i < NUMPIXELS; i++) {
-    pixels.setPixelColor(i, pixels.Color(slave.buffer.red,
-                                         slave.buffer.green, 
-                                         slave.buffer.blue));
+    pixels.setPixelColor(i, pixels.Color(slave.buffer.pixel_red,
+                                         slave.buffer.pixel_green, 
+                                         slave.buffer.pixel_blue));
   }
   pixels.show();
 
@@ -167,18 +185,15 @@ void loop()
 
   if ( everyNmillisec(10) ) {
     // ODOMETRY
-    /*
-      calculateOdom();
-      slave.buffer.pose_x              = pose_x_m;
-      slave.buffer.pose_y              = pose_y_m;
-      slave.buffer.pose_quat_z         = pose_quat_z_unitless;
-      slave.buffer.pose_quat_w         = pose_quat_w_unitless;
-      slave.buffer.pose_twist_linear_x = pose_twist_linear_x_m_per_s;
-      slave.buffer.pose_twist_angle_z  = pose_twist_angle_z_rad_per_s;
-    */
-
-    slave.buffer.left_vel_target_meter_per_sec   = left_wheel_velocity_target();
-    slave.buffer.right_vel_target_meter_per_sec  = right_wheel_velocity_target();
+    calculateOdom();
+    slave.buffer.pose_x              = pose_x_m;
+    slave.buffer.pose_y              = pose_y_m;
+    slave.buffer.pose_quat_z         = pose_quat_z_unitless;
+    slave.buffer.pose_quat_w         = pose_quat_w_unitless;
+    slave.buffer.pose_twist_linear_x = pose_twist_linear_x_m_per_s;
+    slave.buffer.pose_twist_angle_z  = pose_twist_angle_z_rad_per_s;
+    slave.buffer.pose_left_vel_target_meter_per_sec  = get_left_wheel_velocity_target();
+    slave.buffer.pose_right_vel_target_meter_per_sec = get_right_wheel_velocity_target();
     doPID();
   }
 
