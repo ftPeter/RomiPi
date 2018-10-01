@@ -98,12 +98,25 @@ class AStar(HWBase):
         print("       the legacy romi HWBase")
         return (0, 0)
 
+    def read_wheel_velocity(self):
+        if self.swap_motors:
+            left, right = self.read_unpack(44, 8, 'ff')
+        else:
+            right,left = self.read_unpack(44, 8, 'ff')
+        return (left, right)
+
     def read_motors(self):
+        print("ERROR, to read motor speed, you cannot.")
+        print("       in future, this class should not inherit")
+        print("       the legacy romi HWBase")
+        return(0,0)
+        """
         if self.swap_motors:
             left, right = self.read_unpack(6, 8, 'ff')
         else:
             right,left = self.read_unpack(6, 8, 'ff')
         return (left, right)
+        """
 
     def read_buttons(self):
         return self.read_unpack(7, 3, "???")
@@ -142,5 +155,5 @@ if __name__ == '__main__':
     romi.twist(0.5, 0.0)
     while True:
         print("Encoders (l,r):  ", romi.read_encoders() )
-        print("Motor Targets (l,r):", romi.read_motors() )
+        print("Wheel Velocity (l,r):", romi.read_wheel_velocity() )
         time.sleep(0.5)
