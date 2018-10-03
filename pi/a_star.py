@@ -7,6 +7,7 @@
 # B - unsigned char  - 1
 # h - short          - 2
 # H - unsigned short - 2
+# f - float          - 4
 #
 # Copyright Pololu Corporation.  For more information, see https://www.pololu.com/
 
@@ -81,15 +82,25 @@ class AStar(HWBase):
             break
         time.sleep(0.0001)
 
+    """ 
+    read_twist
+
+    mostly for debugging!
+    read back the twist sent by this driver
+    """
+    def read_twist(self):
+        return self.read_unpack(17, 8, 'ff')
+
     def twist(self, linear_x_m_s, angular_z_rad_s):
-        self.write_pack(33, 'f', linear_x_m_s)
-        self.write_pack(40, 'f', angular_z_rad_s)
+        twist_tuple = self.read_twist()
+        #print("twist is {:}".format(twist_tuple))
+        self.write_pack(17, 'f', linear_x_m_s)
+        self.write_pack(21, 'f', angular_z_rad_s)
 
     def leds(self, red, yellow, green):
         self.write_pack(1, '???', green, red, yellow)
 
     def pixels(self, red, green, blue):
-        print("writing: ", red, green, blue)
         self.write_pack(4, 'BBB', red, green, blue)
 
     def motors(self, left, right):
@@ -98,25 +109,20 @@ class AStar(HWBase):
         print("       the legacy romi HWBase")
         return (0, 0)
 
-    def read_wheel_velocity(self):
+    """
+    read_motors_pose
+    returns the instantaneous velocity of each
+    wheel in meters per second.
+    """
+    def read_pose_motors(self):
         if self.swap_motors:
-            left, right = self.read_unpack(44, 8, 'ff')
+            left, right = self.read_unpack(49, 8, 'ff')
         else:
-            right,left = self.read_unpack(44, 8, 'ff')
+            right,left = self.read_unpack(49, 8, 'ff')
         return (left, right)
 
-    def read_motors(self):
-        print("ERROR, to read motor speed, you cannot.")
-        print("       in future, this class should not inherit")
-        print("       the legacy romi HWBase")
-        return(0,0)
-        """
-        if self.swap_motors:
-            left, right = self.read_unpack(6, 8, 'ff')
-        else:
-            right,left = self.read_unpack(6, 8, 'ff')
-        return (left, right)
-        """
+    def read_pose_twist(self):
+        return self.read_unpack(41, 8, 'ff')
 
     def read_buttons(self):
         return self.read_unpack(7, 3, "???")
@@ -155,5 +161,5 @@ if __name__ == '__main__':
     romi.twist(0.5, 0.0)
     while True:
         print("Encoders (l,r):  ", romi.read_encoders() )
-        print("Wheel Velocity (l,r):", romi.read_wheel_velocity() )
+        print("Motor Targets (l,r):", romi.read_motors() )
         time.sleep(0.5)

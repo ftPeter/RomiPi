@@ -11,21 +11,21 @@ romi = AStar()
 
 # turn on red LED
 romi.leds(True,False,False)
-romi.pixels(120,0,0)
+romi.pixels(250,0,0)
 print("LED RED")
 print("PIXEL RED")
 time.sleep(led_delay_s)
 
 # turn on yellow LED
 romi.leds(False,True,False)
-romi.pixels(0,120,0)
+romi.pixels(0,250,0)
 print("LED YELLOW")
 print("PIXEL GREEN")
 time.sleep(led_delay_s)
 
 # turn on green LED
 romi.leds(False,False,True)
-romi.pixels(0,0,120)
+romi.pixels(0,0,250)
 print("LED GREEN")
 print("PIXEL BLUE")
 time.sleep(led_delay_s)
