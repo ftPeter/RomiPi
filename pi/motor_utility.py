@@ -7,48 +7,40 @@ import time
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('red', type=int, 
-                    help='red (0-255) value of pixel')
-parser.add_argument('green', type=int, 
-                    help='green (0-255) value of pixel')
-parser.add_argument('blue', type=int, 
-                    help='blue (0-255) value of pixel')
+parser.add_argument('twist_linear', type=float, 
+                    help='linear component of twist in m/s')
+parser.add_argument('twist_angular', type=float, 
+                    help='angular component of twist in deg/s')
 args = parser.parse_args()
 print(args)
 
-motor_delay_s = 2.0
-forward_speed_m_s = 0.1
-stop_speed_m_s = 0.0
 romi = AStar()
 
-def monitor_pose(duration_s):
+def monitor_pose():
     monitor_freq_hz = 2.0
-
     # move forward for two seconds
-    for i in range(0, int(duration_s*monitor_freq_hz)):
-        print("{:} twist {:}"
-              " motor speed m/s {:}"
-              " pose_twist {:}".format(
+    i = 0
+    while True:
+        print("{:} : target_twist {:} : poses ->"
+              " motor m/s {:}"
+              " twist_tuple {:}".format(
             i / monitor_freq_hz,
             romi.read_twist(),
             romi.read_pose_motors(),
             romi.read_pose_twist()))
         # print motor_speeds for two seconds
+        i = i + 1
         time.sleep(1.0/monitor_freq_hz)
 
-print("initializing...")
-romi.pixels(0,0,255)
 
-print("moving forwards...")
-# twist format is forward vector, rotation vector
-romi.twist(forward_speed_m_s, stop_speed_m_s)
-romi.pixels(0,255,0)
+romi.twist(args.twist_linear, args.twist_angular)
 
-# move forward for two seconds
-monitor_pose(2.0)
+if args.twist_linear == 0.0 and args.twist_angular == 0.0:
+    romi.pixels(0,0,255)
+else:
+    romi.pixels(0,255,0)
 
-print("stopping.")
-romi.twist(stop_speed_m_s, stop_speed_m_s)
-romi.pixels(0,0,255)
-
-monitor_pose(10.0)
+try:
+    monitor_pose()
+except (KeyboardInterrupt):
+    print("all done.")
