@@ -1,8 +1,8 @@
-#!/usr/bin/python3
+#!/usr/bin/python2
 #
 # Notes:
 # read_unpack, write_pack types quick reference
-# https://docs.python.org/3.6/library/struct.html#format-characters
+# https://docs.python.org/2.7/library/struct.html#format-characters
 # ? - bool           - 1
 # B - unsigned char  - 1
 # h - short          - 2
@@ -14,9 +14,8 @@
 import smbus
 import struct
 import time
-from hardware.base import HWBase
 
-class AStar(HWBase):
+class AStar:
     def __init__(self, left_m = -1, right_m = -1, swap_m = False, left_e = -1, right_e = -1, swap_e = True):
         # configure motors
         self.flip_left_motor = left_m
@@ -68,12 +67,13 @@ class AStar(HWBase):
         self.bus.write_byte(20, address)
         time.sleep(0.0002)
         byte_list = [self.bus.read_byte(20) for _ in range(size)]
-        return struct.unpack(format, bytes(byte_list))
+        return struct.unpack(format, bytes(bytearray(byte_list)))
 
     def write_pack(self, address, format, *data):
         for i in range(2):
             try:
-                data_array = list(struct.pack(format, *data))
+                data_array = map(ord, list(struct.pack(format, *data)))
+                print data_array
                 self.bus.write_i2c_block_data(20, address, data_array)
             except IOError:
                 write_fail_flag = True

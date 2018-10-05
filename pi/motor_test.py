@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python2
 #
 # Move the robot forwards and backwards
 from a_star import AStar

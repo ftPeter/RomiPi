@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python2
 #
 # Blink the lights connected to the RomiPi
 # The neopixel should turn red, yellow, then red

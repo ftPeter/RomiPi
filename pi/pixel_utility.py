@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python2
 # pixels_utility.py
 #
 # Manually control the Neopixel colors
@@ -10,11 +10,11 @@ from a_star import AStar
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('red', type=int, 
+parser.add_argument('red', type=int, default=0,
                     help='red (0-255) value of pixel')
-parser.add_argument('green', type=int, 
+parser.add_argument('green', type=int, default=0,
                     help='green (0-255) value of pixel')
-parser.add_argument('blue', type=int, 
+parser.add_argument('blue', type=int, default=0,
                     help='blue (0-255) value of pixel')
 args = parser.parse_args()
 print(args)
