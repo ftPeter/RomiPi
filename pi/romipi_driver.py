@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python2
 #
 # Notes:
 # read_unpack, write_pack types quick reference
@@ -14,9 +14,8 @@
 import smbus
 import struct
 import time
-from hardware.base import HWBase
 
-class AStar(HWBase):
+class AStar:
     def __init__(self, left_m = -1, right_m = -1, swap_m = False, left_e = -1, right_e = -1, swap_e = True):
         # configure motors
         self.flip_left_motor = left_m

@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python2
 # pixels_utility.py
 #
 # Manually control the Neopixel colors
@@ -6,7 +6,7 @@
 # 
 # Peter F. Klemperer
 # September 26, 2018
-from a_star import AStar
+from romipi_driver import AStar
 import argparse
 
 parser = argparse.ArgumentParser()
