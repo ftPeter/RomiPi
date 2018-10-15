@@ -138,6 +138,3 @@ void debug_motors() {
   Serial.print(", target_v "); Serial.print(get_right_wheel_velocity_target());
   Serial.println();
 }
-
-
-

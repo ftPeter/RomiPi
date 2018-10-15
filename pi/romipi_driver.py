@@ -79,7 +79,7 @@ class AStar:
                 print("IOError Detected: write_pack")
                 continue
             break
-        time.sleep(0.0001)
+        time.sleep(0.0001) 
 
     """ 
     read_twist
@@ -88,13 +88,13 @@ class AStar:
     read back the twist sent by this driver
     """
     def read_twist(self):
-        return self.read_unpack(17, 8, 'ff')
+        return self.read_unpack(33, 8, 'ff')
 
     def twist(self, linear_x_m_s, angular_z_rad_s):
         twist_tuple = self.read_twist()
         #print("twist is {:}".format(twist_tuple))
-        self.write_pack(47, 'f', linear_x_m_s)
-        self.write_pack(48, 'f', angular_z_rad_s)
+        self.write_pack(49, 'f', linear_x_m_s)
+        self.write_pack(53, 'f', angular_z_rad_s)
 
     def leds(self, red, yellow, green):
         self.write_pack(1, '???', green, red, yellow)
@@ -113,20 +113,23 @@ class AStar:
     returns the instantaneous velocity of each
     wheel in meters per second.
     """
-    def read_pose_motors(self):
+    #returns velocity of each wheel in meters per second
+    def read_pose_motors(self): 
         if self.swap_motors:
-            left, right = self.read_unpack(49, 8, 'ff')
+            left, right = self.read_unpack(41, 8, 'ff')
         else:
-            right,left = self.read_unpack(49, 8, 'ff')
+            #Start from where?
+            right,left = self.read_unpack(45, 8, 'ff')
         return (left, right)
 
     def read_pose_twist(self):
-        return self.read_unpack(41, 8, 'ff')
+        return self.read_unpack(33, 8, 'ff')
 
     def read_buttons(self):
         return self.read_unpack(7, 3, "???")
 
     def read_battery_millivolts(self):
+        #what is H
         return self.read_unpack(10, 2, "H")[0]
 
     def read_analog(self):
@@ -159,6 +162,6 @@ if __name__ == '__main__':
     print("Encoders (l,r):  ", romi.read_encoders() )
     romi.twist(0.5, 0.0)
     while True:
-        print("Encoders (l,r):  ", romi.read_encoders() )
-        print("Motor Targets (l,r):", romi.read_motors() )
+        print("Encoders (l,r):  ", romi.read_encoders())
+        print("Motor Targets (l,r):", romi.read_motors())
         time.sleep(0.5)
