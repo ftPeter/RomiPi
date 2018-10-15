@@ -93,8 +93,8 @@ class AStar:
     def twist(self, linear_x_m_s, angular_z_rad_s):
         twist_tuple = self.read_twist()
         #print("twist is {:}".format(twist_tuple))
-        self.write_pack(17, 'f', linear_x_m_s)
-        self.write_pack(21, 'f', angular_z_rad_s)
+        self.write_pack(47, 'f', linear_x_m_s)
+        self.write_pack(48, 'f', angular_z_rad_s)
 
     def leds(self, red, yellow, green):
         self.write_pack(1, '???', green, red, yellow)
