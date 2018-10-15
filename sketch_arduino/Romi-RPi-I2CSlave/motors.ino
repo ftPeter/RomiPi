@@ -19,7 +19,7 @@ float left_wheel_velocity() {
   float average = 0;
   static int i;
   left_vel_window[i++] = left_vel_meter_per_sec;
-  if( i >= window_size ) { i = 0; }
+  if( i >= window_size ) { i = 0; } 
   for(int j = 0; j < window_size; j++) {
     average += left_vel_window[i];
   }
