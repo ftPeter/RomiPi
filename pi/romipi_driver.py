@@ -70,7 +70,6 @@ class AStar:
         return struct.unpack(format, bytes(byte_list))
 
     def write_pack(self, address, format, *data):
-        """
         for i in range(2):
             try:
                 data_array = list(struct.pack(format, *data))
@@ -80,11 +79,7 @@ class AStar:
                 print("IOError Detected: write_pack")
                 continue
             break
-        time.sleep(0.0001) """
-        data_array = list(struct.pack(format, *data))
-        self.bus.write_i2c_block_data(20, address, data_array)
-        time.sleep(0.0001)
-
+        time.sleep(0.0001) 
 
     """ 
     read_twist
@@ -167,7 +162,7 @@ class AStar:
 
     def reset_encoders(self):
         # set the reset bit high
-        self.write_pack(12, '?', 1)
+        self.write_pack(12, '?', True)
 
 # Self Test
 if __name__ == '__main__':
