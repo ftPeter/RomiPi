@@ -169,7 +169,7 @@ class AStar:
 if __name__ == '__main__':
     romi = AStar()
     romi.reset_encoders()
-    print("Firmware Version: ", romi.read_firmware_version() )
+    print("Firmware Version: ", romi.read_firmware_version())
     print("Battery:          ", romi.read_battery_millivolts(), " mV")
     print("Encoders (l,r):  ", romi.read_encoders() )
     romi.twist(0.5, 0.0)
