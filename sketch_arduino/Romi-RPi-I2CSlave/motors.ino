@@ -47,12 +47,9 @@ float get_left_average_wheel_velocity() {
   // in meters per second
   float average = 0;
   static int i;
-  left_vel_window[i] = get_instant_left_wheel_vel();
-  i = i + 1;
-  if ( i >= window_size ) {
-    i = 0;
-  }
-  for (int j = 0; j < window_size; j++) {
+  left_vel_window[i++] = left_vel_meter_per_sec;
+  if( i >= window_size ) { i = 0; }
+  for(int j = 0; j < window_size; j++) {
     average += left_vel_window[i];
   }
   average /= window_size;
@@ -78,7 +75,7 @@ float get_right_average_wheel_velocity() {
 }
 
 /*  setMotorSpeeds
- *  
+ *
  *  constraint the motor speed within the motor power limit
  *  then set the speeds
  */
@@ -146,7 +143,7 @@ void doPID() {
   int16_t right_motor = int16_t(Kp * right_error + Ki * right_integral + Kd * right_derivative);
 
   setMotorSpeeds(left_motor, right_motor,
-                 left_error, right_error,  
+                 left_error, right_error,
                  &left_integral, &right_integral,
                  duration_s);
 
@@ -168,6 +165,3 @@ void doPID() {
   Serial.print(", target_v "); Serial.print(get_right_average_wheel_velocity_target());
   Serial.println();
   } */
-
-
-

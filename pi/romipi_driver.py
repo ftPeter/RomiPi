@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python2
 #
 # Notes:
 # read_unpack, write_pack types quick reference
@@ -14,9 +14,8 @@
 import smbus
 import struct
 import time
-from hardware.base import HWBase
 
-class AStar(HWBase):
+class AStar:
     def __init__(self, left_m = -1, right_m = -1, swap_m = False, left_e = -1, right_e = -1, swap_e = True):
         # configure motors
         self.flip_left_motor = left_m
@@ -80,7 +79,7 @@ class AStar(HWBase):
                 print("IOError Detected: write_pack")
                 continue
             break
-        time.sleep(0.0001)
+        time.sleep(0.0001) 
 
     """ 
     read_twist
@@ -89,13 +88,13 @@ class AStar(HWBase):
     read back the twist sent by this driver
     """
     def read_twist(self):
-        return self.read_unpack(17, 8, 'ff')
+        return self.read_unpack(33, 8, 'ff')
 
     def twist(self, linear_x_m_s, angular_z_rad_s):
         twist_tuple = self.read_twist()
         #print("twist is {:}".format(twist_tuple))
-        self.write_pack(17, 'f', linear_x_m_s)
-        self.write_pack(21, 'f', angular_z_rad_s)
+        self.write_pack(49, 'f', linear_x_m_s)
+        self.write_pack(53, 'f', angular_z_rad_s)
 
     def leds(self, red, yellow, green):
         self.write_pack(1, '???', green, red, yellow)
@@ -114,15 +113,28 @@ class AStar(HWBase):
     returns the instantaneous velocity of each
     wheel in meters per second.
     """
-    def read_pose_motors(self):
+    #returns velocity of each wheel in meters per second
+    """
+    def read_pose_motors(self): 
         if self.swap_motors:
-            left, right = self.read_unpack(49, 8, 'ff')
+            left, right = self.read_unpack(41, 8, 'ff')
         else:
-            right,left = self.read_unpack(49, 8, 'ff')
+            #Start from where?
+            right,left = self.read_unpack(45, 8, 'ff')
         return (left, right)
+    """
+    def read_pose_motors(self): 
+        velocity_values = self.read_unpack(41, 8, 'ff')
+        if( velocity_values is None ):
+            return (None,None)
+        elif self.swap_motors:
+            right, left = velocity_values
+        else:
+            left, right = velocity_values
+        return (left, right)    
 
     def read_pose_twist(self):
-        return self.read_unpack(41, 8, 'ff')
+        return self.read_unpack(33, 8, 'ff')
 
     def read_buttons(self):
         return self.read_unpack(7, 3, "???")
@@ -142,24 +154,25 @@ class AStar(HWBase):
             right, left = encoder_values
         else:
             left, right = encoder_values
-        return self.flip_left_encoder * left, self.flip_left_encoder * right
-
+        #return self.flip_left_encoder * left, self.flip_left_encoder * right
+        return (left, right)
+        
     def read_firmware_version(self):
         return self.read_unpack(0, 1, 'B')[0]
 
     def reset_encoders(self):
         # set the reset bit high
-        self.write_pack(12, '?', 1)
+        self.write_pack(12, '?', True)
 
 # Self Test
 if __name__ == '__main__':
     romi = AStar()
     romi.reset_encoders()
-    print("Firmware Version: ", romi.read_firmware_version() )
+    print("Firmware Version: ", romi.read_firmware_version())
     print("Battery:          ", romi.read_battery_millivolts(), " mV")
     print("Encoders (l,r):  ", romi.read_encoders() )
     romi.twist(0.5, 0.0)
     while True:
-        print("Encoders (l,r):  ", romi.read_encoders() )
-        print("Motor Targets (l,r):", romi.read_motors() )
+        print("Encoders (l,r):  ", romi.read_encoders())
+        print("Motor Targets (l,r):", romi.read_pose_motors())
         time.sleep(0.5)

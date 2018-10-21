@@ -1,8 +1,8 @@
-#!/usr/bin/python3
+#!/usr/bin/python2
 #
 # Blink the lights connected to the RomiPi
 # The neopixel should turn red, yellow, then red
-from a_star import AStar
+from romipi_driver import AStar
 import time
 
 led_delay_s = 2.0
