@@ -70,13 +70,6 @@ struct Data
   float twist_linear_x, twist_angle_z; // 17,18,19,20  21,22,23,24
 
   // pose state sent to PI
-<<<<<<< HEAD
-  float pose_x, pose_y;           // 25,26,27,28 29,30,31,32
-  float pose_quat_z, pose_quat_w; // 33,34,35,36, 37,38,39,40
-  float pose_twist_linear_x, pose_twist_angle_z; // 41,42,43,44, 45,46,47,48,
-  float pose_left_vel_meter_per_sec, pose_right_vel_meter_per_sec; //49,50,51,52,  53,54,55,56,
-  // 57,58,59,60
-=======
   float pose_x, pose_y;     // 17,18,19,20,   21,22,23,24
   float pose_quat_z, pose_quat_w;   // 25,26,27,28, 29,30,31,32,
   float pose_twist_linear_x, pose_twist_angle_z; //  33,34,35,36,   37,38,39,40
@@ -84,8 +77,6 @@ struct Data
   
   // twist setting from PI
   float twist_linear_x, twist_angle_z; // 49,50,51,52,  53,54,55,56
-  
->>>>>>> origin/master
 };
 
 
