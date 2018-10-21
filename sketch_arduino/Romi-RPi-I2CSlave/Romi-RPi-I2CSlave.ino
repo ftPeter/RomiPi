@@ -38,8 +38,6 @@
 // example for more information on possible values.
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
-int delayval = 500; // delay for half a second
-
 // end NeoPixel Setup
 
 
@@ -68,16 +66,15 @@ struct Data
   // encoders sent to PI
   bool resetEncoders; // 12
   int16_t leftEncoder, rightEncoder; // 13,14,  15,16
+  // twist setting from PI
+  float twist_linear_x, twist_angle_z; // 17,18,19,20  21,22,23,24
 
   // pose state sent to PI
-  float pose_x, pose_y;     // 20,21,22,23, 24,25,26,27,
-  float pose_quat_z, pose_quat_w;   // 28,29,30,31, 32,33,34,35,
-  float pose_twist_linear_x, pose_twist_angle_z; //  43,37,38,39, 40,41,42,43
-  float pose_left_vel_target_meter_per_sec, pose_right_vel_target_meter_per_sec; // 6,7,8,9, 10,11,12,13
-  
-  // twist setting from PI
-  float twist_linear_x, twist_angle_z; // 47, 48
-  
+  float pose_x, pose_y;           // 25,26,27,28 29,30,31,32
+  float pose_quat_z, pose_quat_w; // 33,34,35,36, 37,38,39,40
+  float pose_twist_linear_x, pose_twist_angle_z; // 41,42,43,44, 45,46,47,48,
+  float pose_left_vel_meter_per_sec, pose_right_vel_meter_per_sec; //49,50,51,52,  53,54,55,56,
+  // 57,58,59,60
 };
 
 
@@ -95,25 +92,10 @@ Romi32U4Encoders encoders;
 /* PREVIOUS TIME AND ENCODER VALUES */
 unsigned long last_time_ms = 0;
 int prev_left_count_ticks, prev_right_count_ticks;
-float left_vel_meter_per_sec, right_vel_meter_per_sec;
 
-/* CURRENT POSE */
-float pose_x_m = 0;
-float pose_y_m = 0;
-float pose_th_rad = 0;
-float pose_quat_z_unitless = 0;
-float pose_quat_w_unitless = 0;
-float pose_twist_linear_x_m_per_s = 0;
-float pose_twist_angle_z_rad_per_s  = 0;
 
-/* MOTOR CONTROL */
-float left_vel_target_meter_per_sec  = 0.0;
-float right_vel_target_meter_per_sec = 0.0;
-int16_t left_motor, right_motor;
 
-/* TWIST CONTROL INPUT */
-float twist_linear_x = 0.0;
-float twist_angle_z = 0.0;
+
 
 void setup()
 {
@@ -142,9 +124,8 @@ void loop()
   slave.updateBuffer();
 
   // set twist sent from Raspberry Pi
-  twist_linear_x = slave.buffer.pose_twist_linear_x;
-  twist_angle_z  = slave.buffer.pose_twist_angle_z;
-  set_twist_target(twist_linear_x, twist_angle_z);
+  set_twist_target(slave.buffer.twist_linear_x,
+                   slave.buffer.twist_angle_z);
 
   // Write various values into the data structure.
   slave.buffer.buttonA = buttonA.isPressed();
@@ -154,17 +135,15 @@ void loop()
   // Change this to readBatteryMillivoltsLV() for the LV model.
   slave.buffer.batteryMillivolts = readBatteryMillivolts();
 
-  // READING the buffer is allowed before or after finalizeWrites().
-
   // update LED signals
   ledYellow(slave.buffer.led_yellow);
   ledGreen(slave.buffer.led_green);
   ledRed(slave.buffer.led_red);
-  
+
   // update pixel colors
-  for (int i=0; i < NUMPIXELS; i++) {
+  for (int i = 0; i < NUMPIXELS; i++) {
     pixels.setPixelColor(i, pixels.Color(slave.buffer.pixel_red,
-                                         slave.buffer.pixel_green, 
+                                         slave.buffer.pixel_green,
                                          slave.buffer.pixel_blue));
   }
   pixels.show();
@@ -186,41 +165,22 @@ void loop()
   if ( everyNmillisec(10) ) {
     // ODOMETRY
     calculateOdom();
-    slave.buffer.pose_x              = pose_x_m;
-    slave.buffer.pose_y              = pose_y_m;
-    slave.buffer.pose_quat_z         = pose_quat_z_unitless;
-    slave.buffer.pose_quat_w         = pose_quat_w_unitless;
-    slave.buffer.pose_twist_linear_x = pose_twist_linear_x_m_per_s;
-    slave.buffer.pose_twist_angle_z  = pose_twist_angle_z_rad_per_s;
-    slave.buffer.pose_left_vel_target_meter_per_sec  = get_left_wheel_velocity_target();
-    slave.buffer.pose_right_vel_target_meter_per_sec = get_right_wheel_velocity_target();
+    // TODO ask Ching-Ching for remind of what these do.
+    slave.buffer.pose_x              = get_pose_x();
+    slave.buffer.pose_y              = get_pose_y();
+    slave.buffer.pose_quat_z         = get_pose_quat_z();
+    slave.buffer.pose_quat_w         = get_pose_quat_w();
+    // measured twist
+    slave.buffer.pose_twist_linear_x = get_pose_twist_linear();
+    slave.buffer.pose_twist_angle_z  = get_pose_twist_angle();
+    // measured wheel velocities
+    slave.buffer.pose_left_vel_meter_per_sec  = get_left_average_wheel_velocity();
+    slave.buffer.pose_right_vel_meter_per_sec = get_right_average_wheel_velocity();
     doPID();
   }
 
-
-  /*
-    if ( every100millisec() ) {
-    debug_motors();
-    }
-  */
-
+  // READING the buffer is allowed before or after finalizeWrites().
   // When you are done WRITING, call finalizeWrites() to make modified
   // data available to I2C master.
   slave.finalizeWrites();
-
-  /*
-    Serial.print("x: ");
-    Serial.print(slave.buffer.pose_x);
-    Serial.print(", y: ");
-    Serial.print(slave.buffer.pose_y);
-    Serial.print(", z: ");
-    Serial.print(slave.buffer.pose_quat_z);
-    Serial.print(", w: ");
-    Serial.print(slave.buffer.pose_quat_w);
-    Serial.print(", vel x_m: ");
-    Serial.print(slave.buffer.pose_twist_linear_x);
-    Serial.print(", vel z_ang: ");
-    Serial.print(slave.buffer.pose_twist_angle_z);
-    Serial.println(" ");
-  */
 }

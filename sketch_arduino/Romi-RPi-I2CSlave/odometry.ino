@@ -1,3 +1,50 @@
+/* CURRENT POSE */
+float pose_x_m = 0;
+float pose_y_m = 0;
+float pose_th_rad = 0;
+float pose_quat_z_unitless = 0;
+float pose_quat_w_unitless = 0;
+float pose_twist_linear_x_m_per_s = 0.0;
+float pose_twist_angle_z_rad_per_s = 0.0;
+float pose_left_vel_meter_per_sec = 0.0;
+float pose_right_vel_meter_per_sec = 0.0;
+
+float get_pose_x() {
+  return pose_x_m;
+}
+
+float get_pose_y() {
+  return pose_y_m;
+}
+
+float get_pose_th_rad() {
+  return pose_th_rad;
+}
+
+float get_pose_quat_z() {
+  return pose_quat_z_unitless;
+}
+
+float get_pose_quat_w() {
+  return pose_quat_w_unitless;
+}
+
+float get_pose_twist_linear() {
+  return pose_twist_linear_x_m_per_s;
+}
+
+float get_pose_twist_angle() {
+  return pose_twist_angle_z_rad_per_s;
+}
+
+float get_instant_left_wheel_vel() {
+  return pose_left_vel_meter_per_sec;
+}
+
+float get_instant_right_wheel_vel() {
+  return pose_right_vel_meter_per_sec;
+}
+
 /* CALCULATE THE ODOMETRY */
 void calculateOdom() {
   /* ODOMETRY CONSTANTS */
@@ -20,11 +67,11 @@ void calculateOdom() {
   float dt_s = float(cur_time_ms - last_time_ms) / 1000.0;
 
   /* CALCULATE THE CURRENT VELOCITY */
-  left_vel_meter_per_sec  = (delta_left_ticks  * dist_per_count_m_per_tick) / dt_s;
-  right_vel_meter_per_sec = (delta_right_ticks * dist_per_count_m_per_tick) / dt_s;
+  pose_left_vel_meter_per_sec  = (delta_left_ticks  * dist_per_count_m_per_tick) / dt_s;
+  pose_right_vel_meter_per_sec = (delta_right_ticks * dist_per_count_m_per_tick) / dt_s;
 
-  float vx_m_per_s = ((left_vel_meter_per_sec + right_vel_meter_per_sec) / 2);
-  float vth_rad_per_s = ((left_vel_meter_per_sec - right_vel_meter_per_sec) / wheel_seperation_dist_m);
+  float vx_m_per_s = ((pose_left_vel_meter_per_sec + pose_right_vel_meter_per_sec) / 2);
+  float vth_rad_per_s = ((pose_left_vel_meter_per_sec - pose_right_vel_meter_per_sec) / wheel_seperation_dist_m);
 
   /* CALCULATE THE CHANGE SINCE PREVIOUS CALL */
   float delta_x_m  = (vx_m_per_s * cos(pose_th_rad)) * dt_s;
