@@ -67,12 +67,12 @@ class AStar:
         self.bus.write_byte(20, address)
         time.sleep(0.0002)
         byte_list = [self.bus.read_byte(20) for _ in range(size)]
-        return struct.unpack(format, bytes(byte_list))
+        return struct.unpack(format, bytes(bytearray(byte_list)))
 
     def write_pack(self, address, format, *data):
         for i in range(2):
             try:
-                data_array = list(struct.pack(format, *data))
+                data_array = map(ord, list(struct.pack(format, *data)))
                 self.bus.write_i2c_block_data(20, address, data_array)
             except IOError:
                 write_fail_flag = True
