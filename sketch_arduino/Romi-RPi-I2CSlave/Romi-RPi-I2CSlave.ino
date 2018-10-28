@@ -66,8 +66,6 @@ struct Data
   // encoders sent to PI
   bool resetEncoders; // 12
   int16_t leftEncoder, rightEncoder; // 13,14,  15,16
-  // twist setting from PI
-  float twist_linear_x, twist_angle_z; // 17,18,19,20  21,22,23,24
 
   // pose state sent to PI
   float pose_x, pose_y;     // 17,18,19,20,   21,22,23,24
@@ -176,8 +174,10 @@ void loop()
     slave.buffer.pose_twist_linear_x = get_pose_twist_linear();
     slave.buffer.pose_twist_angle_z  = get_pose_twist_angle();
     // measured wheel velocities
-    slave.buffer.pose_left_vel_meter_per_sec  = get_left_average_wheel_velocity();
-    slave.buffer.pose_right_vel_meter_per_sec = get_right_average_wheel_velocity();
+    //slave.buffer.pose_left_vel_meter_per_sec  = get_left_average_wheel_velocity();
+    //slave.buffer.pose_right_vel_meter_per_sec = get_right_average_wheel_velocity();
+    slave.buffer.pose_left_vel_target_meter_per_sec = get_left_average_wheel_velocity();
+    slave.buffer.pose_right_vel_target_meter_per_sec = get_right_average_wheel_velocity();
     doPID();
   }
 

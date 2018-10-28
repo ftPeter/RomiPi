@@ -154,7 +154,6 @@ class AStar:
             right, left = encoder_values
         else:
             left, right = encoder_values
-        #return self.flip_left_encoder * left, self.flip_left_encoder * right
         return (left, right)
         
     def read_firmware_version(self):
