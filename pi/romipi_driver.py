@@ -174,4 +174,5 @@ if __name__ == '__main__':
     while True:
         print("Encoders (l,r):  ", romi.read_encoders())
         print("Motor Targets (l,r):", romi.read_pose_motors())
+        print("Twist: ". romi.read_pose_twist())
         time.sleep(0.5)
