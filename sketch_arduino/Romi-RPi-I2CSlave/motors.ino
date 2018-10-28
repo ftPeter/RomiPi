@@ -47,13 +47,13 @@ float get_left_average_wheel_velocity() {
   // in meters per second
   float average = 0;
   static int i;
-  left_vel_window[i++] = left_vel_meter_per_sec;
+  //left_vel_window[i++] = left_vel_meter_per_sec;
+  left_vel_window[i++] = get_instant_left_wheel_vel();
   if( i >= window_size ) { i = 0; }
   for(int j = 0; j < window_size; j++) {
     average += left_vel_window[i];
   }
   average /= window_size;
-
   return average;
 }
 
@@ -62,11 +62,8 @@ float get_right_average_wheel_velocity() {
   // in meters per second
   float average = 0;
   static int i;
-  right_vel_window[i] = get_instant_right_wheel_vel();
-  i = i + 1;
-  if ( i >= window_size ) {
-    i = 0;
-  }
+  right_vel_window[i++] = get_instant_right_wheel_vel();
+  if ( i >= window_size ) { i = 0;}
   for (int j = 0; j < window_size; j++) {
     average += right_vel_window[i];
   }

@@ -176,8 +176,8 @@ void loop()
     // measured wheel velocities
     //slave.buffer.pose_left_vel_meter_per_sec  = get_left_average_wheel_velocity();
     //slave.buffer.pose_right_vel_meter_per_sec = get_right_average_wheel_velocity();
-    slave.buffer.pose_left_vel_target_meter_per_sec = get_left_average_wheel_velocity();
-    slave.buffer.pose_right_vel_target_meter_per_sec = get_right_average_wheel_velocity();
+    slave.buffer.pose_left_vel_target_meter_per_sec = get_instant_left_wheel_vel()();
+    slave.buffer.pose_right_vel_target_meter_per_sec = get_instant_right_wheel_vel();
     doPID();
   }
 
