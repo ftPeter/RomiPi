@@ -114,25 +114,14 @@ class AStar:
     wheel in meters per second.
     """
     #returns velocity of each wheel in meters per second
-    """
+    
     def read_pose_motors(self): 
         if self.swap_motors:
             left, right = self.read_unpack(41, 8, 'ff')
         else:
-            #Start from where?
-            right,left = self.read_unpack(45, 8, 'ff')
+            right,left = self.read_unpack(41, 8, 'ff')
         return (left, right)
-    """
-    def read_pose_motors(self): 
-        velocity_values = self.read_unpack(41, 8, 'ff')
-        if( velocity_values is None ):
-            return (None,None)
-        elif self.swap_motors:
-            right, left = velocity_values
-        else:
-            left, right = velocity_values
-        return (left, right)    
-
+    
     def read_pose_twist(self):
         return self.read_unpack(33, 8, 'ff')
 
@@ -174,5 +163,5 @@ if __name__ == '__main__':
     while True:
         print("Encoders (l,r):  ", romi.read_encoders())
         print("Motor Targets (l,r):", romi.read_pose_motors())
-        print("Twist: ". romi.read_pose_twist())
+        print("Twist: ", romi.read_pose_twist())
         time.sleep(0.5)

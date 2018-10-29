@@ -176,8 +176,8 @@ void loop()
     //slave.buffer.pose_twist_linear_x = twist_linear_x;
     //slave.buffer.pose_twist_angle_z  = twist_angle_z;
     // measured wheel velocities
-    slave.buffer.pose_left_vel_meter_per_sec  = get_left_wheel_target_velocity();
-    slave.buffer.pose_right_vel_meter_per_sec = get_right_wheel_target_velocity();
+    slave.buffer.pose_left_vel_target_meter_per_sec  = get_left_wheel_target_velocity();
+    slave.buffer.pose_right_vel_target_meter_per_sec = get_right_wheel_target_velocity();
     doPID();
   }
 
