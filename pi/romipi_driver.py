@@ -91,7 +91,7 @@ class AStar:
         return self.read_unpack(33, 8, 'ff')
 
     def twist(self, linear_x_m_s, angular_z_rad_s):
-        twist_tuple = self.read_twist()
+        #twist_tuple = self.read_twist()
         #print("twist is {:}".format(twist_tuple))
         self.write_pack(49, 'f', linear_x_m_s)
         self.write_pack(53, 'f', angular_z_rad_s)
@@ -160,8 +160,13 @@ if __name__ == '__main__':
     print("Battery:          ", romi.read_battery_millivolts(), " mV")
     print("Encoders (l,r):  ", romi.read_encoders() )
     romi.twist(0.5, 0.0)
-    while True:
-        print("Encoders (l,r):  ", romi.read_encoders())
-        print("Motor Targets (l,r):", romi.read_pose_motors())
-        print("Twist: ", romi.read_pose_twist())
-        time.sleep(0.5)
+    try:
+
+    	while True:
+        	print("Encoders (l,r):  ", romi.read_encoders())
+        	print("Motor Targets (l,r):", romi.read_pose_motors())
+        	print("Twist: ", romi.read_pose_twist())
+        	time.sleep(0.5)
+    except: 
+    	pass
+    romi.twist(0,0)
