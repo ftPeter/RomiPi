@@ -48,7 +48,7 @@ float get_instant_right_wheel_vel() {
 /* CALCULATE THE ODOMETRY */
 void calculateOdom() {
   /* ODOMETRY CONSTANTS */
-  // wheel diameter in meters (70 mm)
+  // wheel diameter in meters (7 cm)
   float wheel_diam_m = 0.07;
   //the distance between two wheels in meters (14 cm)
   float wheel_seperation_dist_m = 0.14;
@@ -88,8 +88,8 @@ void calculateOdom() {
   pose_quat_w_unitless = cos(pose_th_rad * 0.5);
 
   //set the current velocity
-  pose_twist_linear_x_m_per_s   = vx_m_per_s;
-  pose_twist_angle_z_rad_per_s  = vth_rad_per_s;
+  pose_twist_linear_x_m_per_s  = vx_m_per_s;
+  pose_twist_angle_z_rad_per_s = vth_rad_per_s;
 
   //update previous values
   prev_left_count_ticks  = left_count_ticks;

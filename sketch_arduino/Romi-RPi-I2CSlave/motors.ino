@@ -47,7 +47,6 @@ float get_left_average_wheel_velocity() {
   // in meters per second
   float average = 0;
   static int i;
-  //left_vel_window[i++] = left_vel_meter_per_sec;
   left_vel_window[i++] = get_instant_left_wheel_vel();
   if( i >= window_size ) { i = 0; }
   for(int j = 0; j < window_size; j++) {
