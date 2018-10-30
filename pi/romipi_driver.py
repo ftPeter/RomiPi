@@ -87,12 +87,8 @@ class AStar:
     mostly for debugging!
     read back the twist sent by this driver
     """
-    def read_twist(self):
-        return self.read_unpack(33, 8, 'ff')
 
     def twist(self, linear_x_m_s, angular_z_rad_s):
-        #twist_tuple = self.read_twist()
-        #print("twist is {:}".format(twist_tuple))
         self.write_pack(49, 'f', linear_x_m_s)
         self.write_pack(53, 'f', angular_z_rad_s)
 
@@ -152,6 +148,14 @@ class AStar:
         # set the reset bit high
         self.write_pack(12, '?', True)
 
+    def read_pose_coordinate(self):
+    	x, y = self.read_unpack(17, 8, "ff")
+    	return (x,y)
+   	
+   	def read_quat(self):
+   		z,w = self.read_unpack(25, 8, "ff")
+   		return (z,w)
+
 # Self Test
 if __name__ == '__main__':
     romi = AStar()
@@ -161,11 +165,12 @@ if __name__ == '__main__':
     print("Encoders (l,r):  ", romi.read_encoders() )
     romi.twist(0.5, 0.0)
     try:
-
     	while True:
         	print("Encoders (l,r):  ", romi.read_encoders())
         	print("Motor Targets (l,r):", romi.read_pose_motors())
-        	print("Twist: ", romi.read_pose_twist())
+        	print("Twist (l,r):", romi.read_pose_twist())
+        	print("Pose (x,y):", romi.read_pose_coordinate())
+        	print("Quaternion (z,w):", romi.read_quat())
         	time.sleep(0.5)
     except: 
     	pass
