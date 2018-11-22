@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>romipi_i2c</name>
+  <version>0.0.1</version>
+  <description>
+      Package for RomiPi irc node. With this package, you can communicate
+      the motor, odometry, and transform with the RomiPi over the modified 
+      Pololu I2C driver. You can do simple tests using this package on 
+      rviz with the RomiPi robot.
+  </description>
+  <license>Apache 2.0</license>
+  <maintainer email="pklemper@mtholyoke.edu">Peter F. Klemperer</maintainer>
+  <url type="repository">https://github.com/ftPeter/multi-robotics</url>
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>tf</depend>
+  <depend>turtlebot3_msgs</depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+</package>

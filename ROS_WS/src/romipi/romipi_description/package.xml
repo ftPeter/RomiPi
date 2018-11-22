@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>romipi_description</name>
+  <version>1.0.0</version>
+  <description>
+    3D models of the RomiPi for simulation and visualization
+  </description>
+  <license>Apache 2.0</license>
+  <maintainer email="pklemper@mtholyoke.edu">Peter F. Klemperer</maintainer>
+  <url type="repository">https://github.com/ftPeter/mhc-multirobotics</url>
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>urdf</depend>
+  <depend>xacro</depend>
+</package>

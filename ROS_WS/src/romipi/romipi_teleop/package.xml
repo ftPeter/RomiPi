@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>romipi_teleop</name>
+  <version>1.0.0</version>
+  <description>
+    Provides teleoperation using keyboard for RomiPi
+  </description>
+  <license>BSD</license>
+  <author>Peter Klemperer</author>
+  <maintainer email="pklemper@mtholyoke.edu">Peter Klemperer</maintainer>
+  <url type="repo">https://github.com/ftPeter/mhc-multirobotics/</url>
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+</package>

@@ -1,0 +1,7 @@
+<launch>
+  <param name="model" value="romipi"/>
+
+  <!-- romipi_teleop_key already has its own built in velocity smoother -->
+  <node pkg="romipi_teleop" type="romipi_teleop_key" name="romipi_teleop_keyboard"  output="screen">
+  </node>
+</launch>

@@ -1,0 +1,28 @@
+<launch>
+  <!-- Arguments -->
+  <arg name="model" default="romipi" doc="Pololu ROmi romipi"/>
+  <arg name="map_file" default="$(find romipi_navigation)/maps/map.yaml"/>
+  <arg name="open_rviz" default="true"/>
+
+  <!-- Turtlebot3 -->
+  <include file="$(find romipi_bringup)/launch/romipi_remote.launch">
+    <arg name="model" value="$(arg model)" />
+  </include>
+
+  <!-- Map server -->
+  <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/>
+
+  <!-- AMCL -->
+  <include file="$(find romipi_navigation)/launch/amcl.launch"/>
+
+  <!-- move_base -->
+  <include file="$(find romipi_navigation)/launch/move_base.launch">
+    <arg name="model" value="$(arg model)" />
+  </include>
+
+  <!-- rviz -->
+  <group if="$(arg open_rviz)"> 
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find romipi_navigation)/rviz/romipi_navigation.rviz"/>
+  </group>
+</launch>
