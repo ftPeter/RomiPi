@@ -166,12 +166,16 @@ if __name__ == '__main__':
     romi.twist(0.5, 0.0)
     try:
     	while True:
-        	print("Encoders (l,r):  ", romi.read_encoders())
-        	print("Motor Targets (l,r):", romi.read_pose_motors())
-        	print("Twist (l,r):", romi.read_pose_twist())
-        	print("Pose (x,y):", romi.read_pose_coordinate())
-        	print("Quaternion (z,w):", romi.read_quat())
-        	time.sleep(0.5)
+            romi.twist(0.5, 0.0)
+            time.sleep(1.0)
+            romi.twist(0.0, 0.5)
+            time.sleep(1.0)
+        	romi.twist(0.5, 0.0)
+            time.sleep(1.0)
+            romi.twist(0.0, 0.5)
+            time.sleep(1.0)
+            romi.twist(0.5, 0.0)
+            time.sleep(1.0)
     except: 
     	pass
     romi.twist(0,0)

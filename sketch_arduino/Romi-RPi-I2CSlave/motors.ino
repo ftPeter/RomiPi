@@ -9,48 +9,25 @@
  ** unify odometry and odometry calculation
 */
 
+/* motor velocity targets */
+float left_vel_target_meter_per_sec  = 0.0;
+float right_vel_target_meter_per_sec = 0.0;
+
+/* arrays for calculating moving window average wheel velocity */
 const int window_size = 10;
 float left_vel_window[window_size];
 float right_vel_window[window_size];
 
-float left_wheel_velocity() {
-  // average left wheel velocity
-  // in meters per second
-  float average = 0;
-  static int i;
-  left_vel_window[i++] = left_vel_meter_per_sec;
-  if( i >= window_size ) { i = 0; }
-  for(int j = 0; j < window_size; j++) {
-    average += left_vel_window[i];
-  }
-  average /= window_size;
-  
-  return average;
+void set_wheel_target_velocity(float left, float right) {
+  left_vel_target_meter_per_sec = left;
+  right_vel_target_meter_per_sec = right;
 }
 
-float right_wheel_velocity() {
-  // average right wheel velocity
-  // in meters per second
-  float average = 0;
-  static int i;
-  right_vel_window[i++] = right_vel_meter_per_sec;
-  if( i >= window_size ) { i = 0; }
-  for(int j = 0; j < window_size; j++) {
-    average += right_vel_window[i];
-  }
-  average /= window_size;
-  return average;
-}
-
-float get_left_wheel_velocity_target() {
-  // target left wheel velocity
-  // in meters per second
+float get_left_wheel_target_velocity() {
   return left_vel_target_meter_per_sec;
 }
 
-float get_right_wheel_velocity_target() {
-  // target left wheel velocity
-  // in meters per second
+float get_right_wheel_target_velocity() {
   return right_vel_target_meter_per_sec;
 }
 
@@ -58,17 +35,85 @@ void set_twist_target(float linear_m_s, float angle_rad_s) {
   // convert twist input from pi to motor velocities.
   // TODO unsure if this is correct, double check unit analysis
   float wheel_dist_m = 0.14;
-  
-  right_vel_target_meter_per_sec = (angle_rad_s * wheel_dist_m * 100.0) / 2.0 + linear_m_s;
-  left_vel_target_meter_per_sec = (linear_m_s * 2.0) - right_vel_target_meter_per_sec;
+
+  float right_vel = (angle_rad_s * wheel_dist_m * 100.0) / 2.0 + linear_m_s;
+  float left_vel = (linear_m_s * 2.0) - right_vel;
+
+  set_wheel_target_velocity( left_vel, right_vel );
+}
+
+float get_left_average_wheel_velocity() {
+  // average instantaneous left wheel velocity
+  // in meters per second
+  float average = 0;
+  static int i;
+  left_vel_window[i++] = get_instant_left_wheel_vel();
+  if( i >= window_size ) { i = 0; }
+  for(int j = 0; j < window_size; j++) {
+    average += left_vel_window[i];
+  }
+  average /= window_size;
+  return average;
+}
+
+float get_right_average_wheel_velocity() {
+  // average instantaneous right wheel velocity
+  // in meters per second
+  float average = 0;
+  static int i;
+  right_vel_window[i++] = get_instant_right_wheel_vel();
+  if ( i >= window_size ) { i = 0;}
+  for (int j = 0; j < window_size; j++) {
+    average += right_vel_window[i];
+  }
+  average /= window_size;
+  return average;
+}
+
+/*  setMotorSpeeds
+ *
+ *  constraint the motor speed within the motor power limit
+ *  then set the speeds
+ */
+void setMotorSpeeds(int16_t left_motor, int16_t right_motor,
+                    float left_error, float right_error,
+                    float *left_integral, float *right_integral,
+                    float duration_s ) {
+  const int MOTOR_MAX = 300, MOTOR_MIN = -300;
+
+  /* CONSTRAIN MOTOR SETTING TO THE MOTOR POWER LIMITS */
+  if ( left_motor > MOTOR_MAX ) {
+    left_motor = MOTOR_MAX;
+    *left_integral  = *left_integral - (left_error * duration_s);
+  } else if ( left_motor < MOTOR_MIN ) {
+    left_motor = MOTOR_MIN;
+    *left_integral  = *left_integral - (left_error * duration_s);
+  }
+
+  if ( right_motor > MOTOR_MAX ) {
+    right_motor = MOTOR_MAX;
+    *right_integral  = *right_integral - (right_error * duration_s);
+  } else if ( right_motor < MOTOR_MIN ) {
+    right_motor = MOTOR_MIN;
+    *right_integral  = *right_integral - (right_error * duration_s);
+  }
+
+  if ( get_left_wheel_target_velocity() == 0.0 ) {
+    left_motor = 0;
+  }
+  if ( get_right_wheel_target_velocity() == 0.0 ) {
+    right_motor = 0;
+  }
+
+  /* SET THE MOTORS */
+  motors.setSpeeds(left_motor, right_motor);
 }
 
 void doPID() {
   /* PID AND MOTOR CONSTANTS */
-  const int MOTOR_MAX = 300, MOTOR_MIN = -300;
-  const float Kp = 1000;
-  const float Ki = 1000;
-  const float Kd = 0.01;
+  const float Kp = 300;
+  const float Ki = 0.0; // 1000;
+  const float Kd = 0.0; // 0.01;
 
   /* STATIC VARIABLES */
   static unsigned long prev_time_ms;
@@ -80,64 +125,39 @@ void doPID() {
   long duration_ms = current_time_ms - prev_time_ms;
   float duration_s = 1000.0 * float(duration_ms);
 
-  /* CALCULATE ERROR */
-  float left_error  = get_left_wheel_velocity_target() - left_wheel_velocity();
-  float right_error = get_right_wheel_velocity_target() - right_wheel_velocity();
+  /* CALCULATE ERROR : error = target - measured */
+  float left_error  = get_left_wheel_target_velocity() - get_left_average_wheel_velocity();
+  float right_error = get_right_wheel_target_velocity() - get_right_average_wheel_velocity();
 
-  /* CALCULATE PID */
+  /* PID CALCULATIONS*/
   left_integral  = left_integral  + (left_error * duration_s);
   right_integral = right_integral + (right_error * duration_s);
   float left_derivative  = (left_error - left_prev_error) / duration_s;
-  float right_derivative = (right_error  - right_prev_error) / duration_s;
+  float right_derivative = (right_error - right_prev_error) / duration_s;
 
-  left_motor  = int16_t(Kp * left_error  + Ki * left_integral  + Kd * left_derivative);
-  right_motor = int16_t(Kp * right_error + Ki * right_integral + Kd * right_derivative);
+  int16_t left_motor  = int16_t(Kp * left_error  + Ki * left_integral  + Kd * left_derivative);
+  int16_t right_motor = int16_t(Kp * right_error + Ki * right_integral + Kd * right_derivative);
 
-  /* CONSTRAIN MOTOR SETTING RANGE */
-  if ( left_motor > MOTOR_MAX ) {
-    left_motor = MOTOR_MAX;
-    left_integral  = left_integral - (left_error * duration_s);
-  } else if ( left_motor < MOTOR_MIN ) {
-    left_motor = MOTOR_MIN;
-    left_integral  = left_integral - (left_error * duration_s);
-  }
-  
-  if ( right_motor > MOTOR_MAX ) {
-    right_motor = MOTOR_MAX;
-    right_integral  = right_integral - (right_error * duration_s);
-  } else if ( right_motor < MOTOR_MIN ) {
-    right_motor = MOTOR_MIN;
-    right_integral  = right_integral - (right_error * duration_s);
-  }
+  setMotorSpeeds(left_motor, right_motor,
+                 left_error, right_error,
+                 &left_integral, &right_integral,
+                 duration_s);
 
-  if ( get_left_wheel_velocity_target() == 0.0 ) {
-    left_motor = 0;
-  }
-  if ( get_right_wheel_velocity_target() == 0.0 ) {
-    right_motor = 0;
-  }
-
-  /* SET THE MOTORS */
-  //motors.setSpeeds(left_motor, right_motor);
-  
   // update previous values
   prev_time_ms = current_time_ms;
   left_prev_error  = left_error;
   right_prev_error = right_error;
 }
 
-
-void debug_motors() {
+/*
+  void debug_motors() {
   Serial.print("left");
   Serial.print(" pow "); Serial.print(left_motor);
-  Serial.print(", inst_v "); Serial.print(left_wheel_velocity());
-  Serial.print(", target_v "); Serial.print(get_left_wheel_velocity_target());
+  Serial.print(", inst_v "); Serial.print(get_left_average_wheel_velocity());
+  Serial.print(", target_v "); Serial.print(get_left_average_wheel_velocity_target());
   Serial.print(" right");
   Serial.print(" pow "); Serial.print(right_motor);
-  Serial.print(", inst_v "); Serial.print(right_wheel_velocity());
-  Serial.print(", target_v "); Serial.print(get_right_wheel_velocity_target());
+  Serial.print(", inst_v "); Serial.print(get_right_average_wheel_velocity());
+  Serial.print(", target_v "); Serial.print(get_right_average_wheel_velocity_target());
   Serial.println();
-}
-
-
-
+  } */
