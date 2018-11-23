@@ -1,7 +1,6 @@
-#include <Servo.h>
+//#include <Servo.h>
 #include <Romi32U4.h>
 #include <PololuRPiSlave.h>
-
 
 /* Pololu Romi Example Code included in here:
 
@@ -52,7 +51,7 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ80
    from the start of the buffer. Refer to these when writing the
    Raspberry Pi-side driver.
 */
-#define ROMI_FIRMWARE_VERSION (13)
+#define ROMI_FIRMWARE_VERSION (14)
 struct Data
 {
   uint8_t romi_fw_version = ROMI_FIRMWARE_VERSION; // 0
@@ -68,13 +67,13 @@ struct Data
   int16_t leftEncoder, rightEncoder; // 13,14,  15,16
 
   // pose state sent to PI
-  float pose_x, pose_y;     // 17,18,19,20,   21,22,23,24
-  float pose_quat_z, pose_quat_w;   // 25,26,27,28, 29,30,31,32,
-  float pose_twist_linear_x, pose_twist_angle_z; //  33,34,35,36,   37,38,39,40
-  float pose_left_vel_target_meter_per_sec, pose_right_vel_target_meter_per_sec; // 41,42,43,44,  45,46,47,48
+  float pose_x, pose_y, pose_th_rad;     // 17,18,19,20,   21,22,23,24,   25,26,27,28,
+  float pose_quat_z, pose_quat_w;   //  29,30,31,32,   33,34,35,36,
+  float pose_twist_linear_x, pose_twist_angle_z; // 37,38,39,40,   41,42,43,44,
+  float pose_left_vel_target_meter_per_sec, pose_right_vel_target_meter_per_sec; //   45,46,47,48, 49,50,51,52,  
   
   // twist setting from PI
-  float twist_linear_x, twist_angle_z; // 49,50,51,52,  53,54,55,56
+  float twist_linear_x, twist_angle_z; // 53,54,55,56,   57, 58, 59, 60
 };
 
 
@@ -92,9 +91,6 @@ Romi32U4Encoders encoders;
 /* PREVIOUS TIME AND ENCODER VALUES */
 unsigned long last_time_ms = 0;
 int prev_left_count_ticks, prev_right_count_ticks;
-
-
-
 
 
 void setup()
@@ -165,19 +161,20 @@ void loop()
   if (everyNmillisec(10)) {
     // ODOMETRY
     calculateOdom();
-    // TODO ask Ching-Ching for remind of what these do.
+    // measured orientation of robot on X,Y plane
     slave.buffer.pose_x              = get_pose_x();
     slave.buffer.pose_y              = get_pose_y();
+    slave.buffer.pose_th_rad         = get_pose_th_rad();
     slave.buffer.pose_quat_z         = get_pose_quat_z();
     slave.buffer.pose_quat_w         = get_pose_quat_w();
     // measured twist
     slave.buffer.pose_twist_linear_x = get_pose_twist_linear();
     slave.buffer.pose_twist_angle_z  = get_pose_twist_angle();
-    //slave.buffer.pose_twist_linear_x = twist_linear_x;
-    //slave.buffer.pose_twist_angle_z  = twist_angle_z;
     // measured wheel velocities
     slave.buffer.pose_left_vel_target_meter_per_sec  = get_left_wheel_target_velocity();
     slave.buffer.pose_right_vel_target_meter_per_sec = get_right_wheel_target_velocity();
+
+    // update motor control
     doPID();
   }
 
