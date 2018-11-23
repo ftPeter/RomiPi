@@ -27,6 +27,10 @@ class AStar:
         self.swap_encoders = swap_e
         # open I2C port
         self.bus = smbus.SMBus(1)
+        
+        fw_version = self.read_firmware_version()
+        if fw_version != 14:
+            raise ValueError('Incorrect Romi Firmware Version Detected %d' % fw_version)
 
     def close(self):
         self.bus.close()
@@ -89,8 +93,7 @@ class AStar:
     """
 
     def twist(self, linear_x_m_s, angular_z_rad_s):
-        self.write_pack(49, 'f', linear_x_m_s)
-        self.write_pack(53, 'f', angular_z_rad_s)
+        self.write_pack(53, 'ff', linear_x_m_s, angular_z_rad_s)
 
     def leds(self, red, yellow, green):
         self.write_pack(1, '???', green, red, yellow)
@@ -113,13 +116,13 @@ class AStar:
     
     def read_pose_motors(self): 
         if self.swap_motors:
-            left, right = self.read_unpack(41, 8, 'ff')
+            left, right = self.read_unpack(45, 8, 'ff')
         else:
-            right,left = self.read_unpack(41, 8, 'ff')
+            right,left = self.read_unpack(45, 8, 'ff')
         return (left, right)
     
     def read_pose_twist(self):
-        return self.read_unpack(33, 8, 'ff')
+        return self.read_unpack(37, 8, 'ff')
 
     def read_buttons(self):
         return self.read_unpack(7, 3, "???")
@@ -149,11 +152,11 @@ class AStar:
         self.write_pack(12, '?', True)
 
     def read_pose_coordinate(self):
-    	x, y = self.read_unpack(17, 8, "ff")
+    	x, y = self.read_unpack(17, 12, "fff")
     	return (x,y)
    	
     def read_quat(self):
-        z,w = self.read_unpack(25, 8, "ff")
+        z,w = self.read_unpack(29, 8, "ff")
     	return (z,w)
 
 # Self Test
