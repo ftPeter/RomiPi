@@ -16,15 +16,7 @@ import struct
 import time
 
 class AStar:
-    def __init__(self, left_m = -1, right_m = -1, swap_m = False, left_e = -1, right_e = -1, swap_e = True):
-        # configure motors
-        self.flip_left_motor = left_m
-        self.flip_right_motor = right_m
-        self.swap_motors = swap_m
-        # configure encoders
-        self.flip_left_encoder = left_e
-        self.flip_right_encoder = right_e
-        self.swap_encoders = swap_e
+    def __init__(self):
         # open I2C port
         self.bus = smbus.SMBus(1)
         
@@ -34,20 +26,6 @@ class AStar:
 
     def close(self):
         self.bus.close()
-
-    def flip_motors(self, left, right ):
-      self.flip_left_motor  = left if -1 else 1
-      self.flip_right_motor = right if -1 else 1
-
-    def swap_motors(self, swap ):
-      self.swap_motors = swap
-
-    def flip_encoders(self, left, right ):
-      self.flip_left_motor  = left if -1 else 1
-      self.flip_right_motor = right if -1 else 1
-
-    def swap_encoders(self, swap ):
-      self.swap_encoders = swap
 
     def read_raw(self, size):
         try:
@@ -85,15 +63,17 @@ class AStar:
             break
         time.sleep(0.0001) 
 
-    """ 
-    read_twist
-
-    mostly for debugging!
-    read back the twist sent by this driver
     """
-
+    Robot Commands
+    These methods send commandd to the robot 
+    to take actions
+    """
     def twist(self, linear_x_m_s, angular_z_rad_s):
         self.write_pack(53, 'ff', linear_x_m_s, angular_z_rad_s)
+
+    def read_twist(self): # mostly here for debug
+        """read back the twist command sent by this driver"""
+        return self.read_unpack(53, 8, 'ff')
 
     def leds(self, red, yellow, green):
         self.write_pack(1, '???', green, red, yellow)
@@ -101,24 +81,15 @@ class AStar:
     def pixels(self, red, green, blue):
         self.write_pack(4, 'BBB', red, green, blue)
 
-    def motors(self, left, right):
-        print("ERROR, to set motor speed, use twist instead")
-        print("       in future, this class should not inherit")
-        print("       the legacy romi HWBase")
-        return (0, 0)
-
     """
-    read_motors_pose
-    returns the instantaneous velocity of each
-    wheel in meters per second.
+    Pose Related Methods
+    these methods relate to estimated pose
+    of the robot as measured by itself.
     """
-    #returns velocity of each wheel in meters per second
-    
     def read_pose_motors(self): 
-        if self.swap_motors:
-            left, right = self.read_unpack(45, 8, 'ff')
-        else:
-            right,left = self.read_unpack(45, 8, 'ff')
+        """instantaneous velocity of (left,right) wheels in m/s
+        """
+        left, right = self.read_unpack(45, 8, 'ff')
         return (left, right)
     
     def read_pose_twist(self):
@@ -138,10 +109,7 @@ class AStar:
         encoder_values = self.read_unpack(13, 4, 'hh')
         if( encoder_values is None ):
             return (None,None)
-        elif self.swap_encoders:
-            right, left = encoder_values
-        else:
-            left, right = encoder_values
+        left, right = encoder_values
         return (left, right)
         
     def read_firmware_version(self):
@@ -152,12 +120,25 @@ class AStar:
         self.write_pack(12, '?', True)
 
     def read_pose_coordinate(self):
-    	x, y = self.read_unpack(17, 12, "fff")
-    	return (x,y)
+    	x, y, theta = self.read_unpack(17, 12, "fff")
+    	return (x,y,theta)
    	
     def read_quat(self):
         z,w = self.read_unpack(29, 8, "ff")
     	return (z,w)
+
+    def print_debug_info(self):
+        print "== RomiPi Debug Info ============================="
+        print("Firmware Version: ", self.read_firmware_version())
+        print("Battery:          ", self.read_battery_millivolts(), " mV")
+        print "Commands:"
+        print "Encoders (l,r):  ", self.read_encoders()
+        print "Motor Targets (l,r): ", self.read_pose_motors()
+        print "Commanded Twist (linear m/s, rotation rad/s: %0.1f, %0.1f" % self.read_twist()
+        print "Estimates:"
+        print "Estimated Twist (linear m/s, rotation rad/s): %0.2f, %0.2f" % self.read_pose_twist()
+        print "Estimated Pose (x m,y m, theta rad): %0.1f, %0.1f %0.1f" % self.read_pose_coordinate()
+        print "Estimated Quaternion (z,w): %0.2f, %0.2f" % self.read_quat()
 
 # Self Test
 if __name__ == '__main__':
