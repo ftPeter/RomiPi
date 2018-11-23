@@ -152,9 +152,9 @@ class AStar:
     	x, y = self.read_unpack(17, 8, "ff")
     	return (x,y)
    	
-   	def read_quat(self):
-   		z,w = self.read_unpack(25, 8, "ff")
-   		return (z,w)
+    def read_quat(self):
+        z,w = self.read_unpack(25, 8, "ff")
+    	return (z,w)
 
 # Self Test
 if __name__ == '__main__':

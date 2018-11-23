@@ -21,11 +21,10 @@ def monitor_pose():
     # move forward for two seconds
     i = 0
     while True:
-        print("{:} : target_twist {:} : poses ->"
+        print("{:} : poses ->"
               " motor m/s {:}"
               " twist_tuple {:}".format(
             i / monitor_freq_hz,
-            romi.read_twist(),
             romi.read_pose_motors(),
             romi.read_pose_twist()))
         # print motor_speeds for two seconds
