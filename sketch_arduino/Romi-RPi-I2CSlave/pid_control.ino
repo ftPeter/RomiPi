@@ -1,10 +1,5 @@
 /*  PID controller inspired by:
      https://github.com/jfstepha/differential-drive/blob/master/scripts/pid_velocity.py
-    Planned work:
- ** change to moving window average velocity
-    instead of instantaneous
- ** add encoder wrap capability to velocity calculation
- ** unify odometry and odometry calculation
 */
 
 

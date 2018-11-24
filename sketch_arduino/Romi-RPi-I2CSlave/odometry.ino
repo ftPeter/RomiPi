@@ -45,27 +45,36 @@ float get_instant_right_wheel_vel() {
   return pose_right_vel_meter_per_sec;
 }
 
-float calculate_velocity(current_ticks, prev_ticks, dt_s) {
-  float delta_ticks = current_ticks - prev_ticks;
-  return delta_ticks * METERS_PER_TICK / dt_s;
+float calculate_velocity(int current_ticks, int prev_ticks, float dt_s) {
+  float delta_ticks;
+  // Worry about three cases for tick difference:
+  if ( prev_ticks < ENCODER_WIN_LOW and current_ticks > ENCODER_WIN_HIGH) {
+    // 1. roll-over from previous near max and current near min
+    delta_ticks = MIN_INT16 - prev_ticks;
+    delta_ticks += current_ticks - MAX_INT16;
+  } else if (prev_ticks > ENCODER_WIN_HIGH and current_ticks < ENCODER_WIN_LOW) {
+    // 2. roll-over from previous near max and current near min
+    delta_ticks = MAX_INT16 - prev_ticks;
+    delta_ticks += current_ticks - MIN_INT16;
+  } else {
+    // 3. no roll-over
+    delta_ticks = float(current_ticks - prev_ticks);
+  }
+  
+  return (delta_ticks * METERS_PER_TICK / dt_s);
 }
 
 /* CALCULATE THE ODOMETRY */
 void calculateOdom() {
   /* READ THE ENCODERS AND TIME */
   unsigned long cur_time_ms = millis();
+  float dt_s = elapsed_seconds(cur_time_ms, last_time_ms);
   int left_count_ticks  = hw_getencoder_left();
   int right_count_ticks = hw_getencoder_right();
 
-  //extract the wheel velocities from the tick signals count
-  float delta_left_ticks  = float(left_count_ticks - prev_left_count_ticks);
-  float delta_right_ticks = float(right_count_ticks - prev_right_count_ticks);
-
-  float dt_s = elapsed_seconds(cur_time_ms, last_time_ms);
-
   /* CALCULATE THE CURRENT VELOCITY */
-  pose_left_vel_meter_per_sec  = (delta_left_ticks  * METERS_PER_TICK) / dt_s;
-  pose_right_vel_meter_per_sec = (delta_right_ticks * METERS_PER_TICK) / dt_s;
+  pose_left_vel_meter_per_sec  = calculate_velocity(left_count_ticks, prev_left_count_ticks, dt_s);
+  pose_right_vel_meter_per_sec = calculate_velocity(right_count_ticks, prev_right_count_ticks, dt_s);
 
   float vx_m_per_s = ((pose_left_vel_meter_per_sec + pose_right_vel_meter_per_sec) / 2);
   float vth_rad_per_s = ((pose_right_vel_meter_per_sec - pose_left_vel_meter_per_sec) / WHEEL_SEPERATION_DIST_M);

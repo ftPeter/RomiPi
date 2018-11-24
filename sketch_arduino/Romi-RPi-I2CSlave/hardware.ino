@@ -44,6 +44,11 @@ void hw_motors_setspeeds(int left, int right) {
 /* interface to allow swapping motor directions
     and positions.
 */
+const int16_t MAX_INT16 = 32767;
+const int16_t MIN_INT16 = -32768;
+const int16_t ENCODER_WIN_HIGH = MAX_INT16 * 0.7;
+const int16_t ENCODER_WIN_LOW  = MIN_INT16 * 0.7;
+
 int flip_encoder_dir = 1;
 bool swap_encoders = true;
 
