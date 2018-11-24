@@ -15,6 +15,8 @@ try:
     while True:
         romi.print_debug_info()
         time.sleep(0.5)
+except KeyboardInterrupt:
+    pass
 except Exception as e:
     print e
 
