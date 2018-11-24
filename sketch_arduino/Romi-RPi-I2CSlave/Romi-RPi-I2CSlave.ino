@@ -121,8 +121,8 @@ void loop()
     slave.buffer.rightEncoder  = encoders.getCountsAndResetRight();
   } else {
     // update encoder buffer without reset
-    slave.buffer.leftEncoder = encoders.getCountsLeft();
-    slave.buffer.rightEncoder = encoders.getCountsRight();
+    slave.buffer.leftEncoder = hw_getencoder_left();
+    slave.buffer.rightEncoder = hw_getencoder_right();
   }
 
 
@@ -133,11 +133,11 @@ void loop()
     slave.buffer.pose_x              = get_pose_x();
     slave.buffer.pose_y              = get_pose_y();
     slave.buffer.pose_th_rad         = get_pose_th_rad();
-    slave.buffer.pose_quat_z         = get_pose_quat_z();
-    slave.buffer.pose_quat_w         = get_pose_quat_w();
+    slave.buffer.pose_quat_z         = debug_get_left_motor_power();//= get_pose_quat_z();TODO DEBUG HACK
+    slave.buffer.pose_quat_w         = debug_get_right_motor_power();//= get_pose_quat_w(); TODO DEBUG HACK
     // measured twist
-    slave.buffer.pose_twist_linear_x = get_pose_twist_linear();
-    slave.buffer.pose_twist_angle_z  = get_pose_twist_angle();
+    slave.buffer.pose_twist_linear_x = debug_get_left_motor_power();
+    slave.buffer.pose_twist_angle_z  = debug_get_right_motor_power();
     // measured wheel velocities
     slave.buffer.pose_left_vel_target_meter_per_sec  = get_left_wheel_target_velocity();
     slave.buffer.pose_right_vel_target_meter_per_sec = get_right_wheel_target_velocity();

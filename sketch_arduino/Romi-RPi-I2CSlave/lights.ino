@@ -4,24 +4,12 @@
    based on the Neopixel example from the adafruit neopixel library
 */
 
-// NeoPixel Setup Materials
-// NeoPixel Ring simple sketch (c) 2013 Shae Erisson
-// released under the GPLv3 license to match the rest of the AdaFruit NeoPixel library
 #include <Adafruit_NeoPixel.h>
-#ifdef __AVR__
-#include <avr/power.h>
-#endif
 
-// Which pin on the Romi is connected to the NeoPixels?
-#define PIN            1
-
-// How many NeoPixels are attached to the Romi?
+#define NEOPIXEL_PIN            1
 #define NUMPIXELS      2
 
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
-
-// end NeoPixel Setup
-
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
 void lights_init() {
   pixels.begin(); // This initializes the NeoPixel library.
