@@ -1,3 +1,10 @@
+/* odometry
+ * 
+ * functions related to measuring pose.
+ * 
+ * November 24, 2018
+ */
+ 
 /* CURRENT POSE */
 float pose_x_m = 0;
 float pose_y_m = 0;

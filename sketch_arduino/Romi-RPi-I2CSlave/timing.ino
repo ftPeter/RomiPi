@@ -1,3 +1,10 @@
+/* timing
+ * 
+ * functions related to time.
+ * 
+ * November 24, 2018
+ */
+
 float elapsed_seconds(unsigned long current_ms, unsigned long previous_ms) {
   // TODO update this to account for roll-over
   return ms_to_seconds(float(current_ms - previous_ms));

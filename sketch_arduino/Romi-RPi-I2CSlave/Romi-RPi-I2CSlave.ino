@@ -2,6 +2,8 @@
 #include <Romi32U4.h>
 #include <PololuRPiSlave.h>
 
+#define ROMI_FIRMWARE_VERSION (14)
+
 /* Pololu Romi Example Code included in here:
 
    This example program shows how to make the Romi 32U4 Control Board
@@ -16,7 +18,6 @@
 
 */
 
-
 /* Custom data structure that we will use for interpreting the buffer.
    We recommend keeping this under 64 bytes total.  If you change the
    data format, make sure to update the corresponding code in
@@ -28,7 +29,6 @@
    from the start of the buffer. Refer to these when writing the
    Raspberry Pi-side driver.
 */
-#define ROMI_FIRMWARE_VERSION (14)
 struct Data
 {
   uint8_t romi_fw_version = ROMI_FIRMWARE_VERSION; // 0
@@ -47,12 +47,11 @@ struct Data
   float pose_x, pose_y, pose_th_rad;     // 17,18,19,20,   21,22,23,24,   25,26,27,28,
   float pose_quat_z, pose_quat_w;   //  29,30,31,32,   33,34,35,36,
   float pose_twist_linear_x, pose_twist_angle_z; // 37,38,39,40,   41,42,43,44,
-  float pose_left_vel_target_meter_per_sec, pose_right_vel_target_meter_per_sec; //   45,46,47,48, 49,50,51,52,  
-  
+  float pose_left_vel_target_meter_per_sec, pose_right_vel_target_meter_per_sec; //   45,46,47,48, 49,50,51,52,
+
   // twist setting from PI
   float twist_linear_x, twist_angle_z; // 53,54,55,56,   57, 58, 59, 60
 };
-
 
 // PololuRPiSlave<BufferType, pi_delay_us>
 // NOTE: the 20 us delay here and the address of 20 below
@@ -68,7 +67,6 @@ Romi32U4Encoders encoders;
 /* PREVIOUS TIME AND ENCODER VALUES */
 unsigned long last_time_ms = 0;
 int prev_left_count_ticks, prev_right_count_ticks;
-
 
 void setup()
 {
@@ -114,8 +112,7 @@ void loop()
 
   // update encoders
   if (slave.buffer.resetEncoders)
-  {
-    // reset and update encoder buffer
+  { // reset and update encoder buffer
     slave.buffer.resetEncoders = 0;
     slave.buffer.leftEncoder   = encoders.getCountsAndResetLeft();
     slave.buffer.rightEncoder  = encoders.getCountsAndResetRight();
@@ -125,7 +122,6 @@ void loop()
     slave.buffer.rightEncoder = hw_getencoder_right();
   }
 
-
   if (everyNmillisec(10)) {
     // ODOMETRY
     calculateOdom();
@@ -133,7 +129,7 @@ void loop()
     slave.buffer.pose_x              = get_pose_x();
     slave.buffer.pose_y              = get_pose_y();
     slave.buffer.pose_th_rad         = get_pose_th_rad();
-    slave.buffer.pose_quat_z         = debug_get_left_motor_power();//= get_pose_quat_z();TODO DEBUG HACK
+    slave.buffer.pose_quat_z         = debug_get_left_motor_power(); //= get_pose_quat_z(); TODO DEBUG HACK
     slave.buffer.pose_quat_w         = debug_get_right_motor_power();//= get_pose_quat_w(); TODO DEBUG HACK
     // measured twist
     slave.buffer.pose_twist_linear_x = get_pose_twist_linear();
