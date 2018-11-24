@@ -50,7 +50,7 @@ const int16_t ENCODER_WIN_HIGH = MAX_INT16 * 0.7;
 const int16_t ENCODER_WIN_LOW  = MIN_INT16 * 0.7;
 
 int flip_encoder_dir = -1;
-bool swap_encoders = false;
+bool swap_encoders = true;
 
 int hw_getencoder_left() {
   if ( swap_encoders ) {
