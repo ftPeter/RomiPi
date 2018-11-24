@@ -136,8 +136,8 @@ void loop()
     slave.buffer.pose_quat_z         = debug_get_left_motor_power();//= get_pose_quat_z();TODO DEBUG HACK
     slave.buffer.pose_quat_w         = debug_get_right_motor_power();//= get_pose_quat_w(); TODO DEBUG HACK
     // measured twist
-    slave.buffer.pose_twist_linear_x = debug_get_left_motor_power();
-    slave.buffer.pose_twist_angle_z  = debug_get_right_motor_power();
+    slave.buffer.pose_twist_linear_x = get_pose_twist_linear();
+    slave.buffer.pose_twist_angle_z  = get_pose_twist_angle();
     // measured wheel velocities
     slave.buffer.pose_left_vel_target_meter_per_sec  = get_left_wheel_target_velocity();
     slave.buffer.pose_right_vel_target_meter_per_sec = get_right_wheel_target_velocity();

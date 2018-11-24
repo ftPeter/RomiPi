@@ -1,5 +1,7 @@
 /*  PID controller inspired by:
      https://github.com/jfstepha/differential-drive/blob/master/scripts/pid_velocity.py
+
+     TODO : Integral term of PID seems broken. Try to tune at some point.
 */
 
 
@@ -110,8 +112,8 @@ void setMotorSpeeds(int16_t left_motor, int16_t right_motor,
 void doPID() {
   /* PID AND MOTOR CONSTANTS */
   const float Kp = 300;
-  const float Ki = 0.0; // 1000;
-  const float Kd = 0.0; // 0.01;
+  const float Ki = 0.0;
+  const float Kd = 10;
 
   /* STATIC VARIABLES */
   static unsigned long prev_time_ms;
