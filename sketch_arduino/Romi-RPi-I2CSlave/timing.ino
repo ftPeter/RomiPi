@@ -1,3 +1,11 @@
+float elapsed_seconds(unsigned long current_ms, unsigned long previous_ms) {
+  // TODO update this to account for roll-over
+  return ms_to_seconds(float(current_ms - previous_ms));
+}
+
+float ms_to_seconds(float ms) {
+  return ms / 1000.0;
+}
 
 bool everyNmillisec(unsigned int N) {
   static unsigned int next_time_ms;

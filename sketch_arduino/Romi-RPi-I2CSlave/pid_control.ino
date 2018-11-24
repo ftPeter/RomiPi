@@ -1,22 +1,17 @@
 /*  PID controller inspired by:
      https://github.com/jfstepha/differential-drive/blob/master/scripts/pid_velocity.py
-    Planned work:
- ** Add reverse motor capability (also to buffer)
- ** Add left_right swap capability (also to buffer)
- ** change to moving window average velocity
-    instead of instantaneous
- ** add encoder wrap capability to velocity calculation
- ** unify odometry and odometry calculation
+
+     TODO : Integral term of PID seems broken. Try to tune at some point.
 */
+
+
+/* methods for handling twist commands and converting them 
+ *  to target motor velocities
+ */
 
 /* motor velocity targets */
 float left_vel_target_meter_per_sec  = 0.0;
 float right_vel_target_meter_per_sec = 0.0;
-
-/* arrays for calculating moving window average wheel velocity */
-const int window_size = 10;
-float left_vel_window[window_size];
-float right_vel_window[window_size];
 
 void set_wheel_target_velocity(float left, float right) {
   left_vel_target_meter_per_sec = left;
@@ -33,14 +28,20 @@ float get_right_wheel_target_velocity() {
 
 void set_twist_target(float linear_m_s, float angle_rad_s) {
   // convert twist input from pi to motor velocities.
-  // TODO unsure if this is correct, double check unit analysis
-  float wheel_dist_m = 0.14;
-
-  float right_vel = (angle_rad_s * wheel_dist_m * 100.0) / 2.0 + linear_m_s;
+  float right_vel = (angle_rad_s * WHEEL_SEPERATION_DIST_M) / 2.0 + linear_m_s;
   float left_vel = (linear_m_s * 2.0) - right_vel;
 
   set_wheel_target_velocity( left_vel, right_vel );
 }
+
+/* methods smoothing instantaneous wheel velocities reported by
+ * the odometry methods get_instant_left_wheel_vel(), get_instant_right_wheel_vel()
+ */
+
+/* arrays for calculating moving window average wheel velocity */
+const int window_size = 10;
+float left_vel_window[window_size];
+float right_vel_window[window_size];
 
 float get_left_average_wheel_velocity() {
   // average instantaneous left wheel velocity
@@ -79,8 +80,6 @@ void setMotorSpeeds(int16_t left_motor, int16_t right_motor,
                     float left_error, float right_error,
                     float *left_integral, float *right_integral,
                     float duration_s ) {
-  const int MOTOR_MAX = 300, MOTOR_MIN = -300;
-
   /* CONSTRAIN MOTOR SETTING TO THE MOTOR POWER LIMITS */
   if ( left_motor > MOTOR_MAX ) {
     left_motor = MOTOR_MAX;
@@ -98,6 +97,7 @@ void setMotorSpeeds(int16_t left_motor, int16_t right_motor,
     *right_integral  = *right_integral - (right_error * duration_s);
   }
 
+  /* REMOVE THIS TO FOR ACTIVE BRAKING */
   if ( get_left_wheel_target_velocity() == 0.0 ) {
     left_motor = 0;
   }
@@ -106,14 +106,14 @@ void setMotorSpeeds(int16_t left_motor, int16_t right_motor,
   }
 
   /* SET THE MOTORS */
-  motors.setSpeeds(left_motor, right_motor);
+  hw_motors_setspeeds(left_motor, right_motor);
 }
 
 void doPID() {
   /* PID AND MOTOR CONSTANTS */
   const float Kp = 300;
-  const float Ki = 0.0; // 1000;
-  const float Kd = 0.0; // 0.01;
+  const float Ki = 0.0;
+  const float Kd = 10;
 
   /* STATIC VARIABLES */
   static unsigned long prev_time_ms;
@@ -148,16 +148,3 @@ void doPID() {
   left_prev_error  = left_error;
   right_prev_error = right_error;
 }
-
-/*
-  void debug_motors() {
-  Serial.print("left");
-  Serial.print(" pow "); Serial.print(left_motor);
-  Serial.print(", inst_v "); Serial.print(get_left_average_wheel_velocity());
-  Serial.print(", target_v "); Serial.print(get_left_average_wheel_velocity_target());
-  Serial.print(" right");
-  Serial.print(" pow "); Serial.print(right_motor);
-  Serial.print(", inst_v "); Serial.print(get_right_average_wheel_velocity());
-  Serial.print(", target_v "); Serial.print(get_right_average_wheel_velocity_target());
-  Serial.println();
-  } */

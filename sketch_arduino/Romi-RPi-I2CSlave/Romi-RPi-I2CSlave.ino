@@ -16,29 +16,6 @@
 
 */
 
-// NeoPixel Setup Materials
-// NeoPixel Ring simple sketch (c) 2013 Shae Erisson
-// released under the GPLv3 license to match the rest of the AdaFruit NeoPixel library
-
-#include <Adafruit_NeoPixel.h>
-#ifdef __AVR__
-#include <avr/power.h>
-#endif
-
-// Which pin on the Arduino is connected to the NeoPixels?
-// On a Trinket or Gemma we suggest changing this to 1
-#define PIN            1
-
-// How many NeoPixels are attached to the Arduino?
-#define NUMPIXELS      2
-
-// When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
-// Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
-// example for more information on possible values.
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
-
-// end NeoPixel Setup
-
 
 /* Custom data structure that we will use for interpreting the buffer.
    We recommend keeping this under 64 bytes total.  If you change the
@@ -101,12 +78,7 @@ void setup()
   // Play startup sound.
   buzzer.play("v10>>g16>>>c16");
 
-  pixels.begin(); // This initializes the NeoPixel library.
-  for (int i = 0; i < 150; i++) {
-    pixels.setPixelColor(0, pixels.Color(i, i, i));
-    pixels.show();
-    delay(10);
-  }
+  lights_init();
 
   ledYellow(false);
   ledGreen(true);
@@ -136,13 +108,9 @@ void loop()
   ledGreen(slave.buffer.led_green);
   ledRed(slave.buffer.led_red);
 
-  // update pixel colors
-  for (int i = 0; i < NUMPIXELS; i++) {
-    pixels.setPixelColor(i, pixels.Color(slave.buffer.pixel_red,
-                                         slave.buffer.pixel_green,
-                                         slave.buffer.pixel_blue));
-  }
-  pixels.show();
+  lights_update(slave.buffer.pixel_red,
+                slave.buffer.pixel_green,
+                slave.buffer.pixel_blue);
 
   // update encoders
   if (slave.buffer.resetEncoders)
@@ -153,8 +121,8 @@ void loop()
     slave.buffer.rightEncoder  = encoders.getCountsAndResetRight();
   } else {
     // update encoder buffer without reset
-    slave.buffer.leftEncoder = encoders.getCountsLeft();
-    slave.buffer.rightEncoder = encoders.getCountsRight();
+    slave.buffer.leftEncoder = hw_getencoder_left();
+    slave.buffer.rightEncoder = hw_getencoder_right();
   }
 
 
@@ -165,8 +133,8 @@ void loop()
     slave.buffer.pose_x              = get_pose_x();
     slave.buffer.pose_y              = get_pose_y();
     slave.buffer.pose_th_rad         = get_pose_th_rad();
-    slave.buffer.pose_quat_z         = get_pose_quat_z();
-    slave.buffer.pose_quat_w         = get_pose_quat_w();
+    slave.buffer.pose_quat_z         = debug_get_left_motor_power();//= get_pose_quat_z();TODO DEBUG HACK
+    slave.buffer.pose_quat_w         = debug_get_right_motor_power();//= get_pose_quat_w(); TODO DEBUG HACK
     // measured twist
     slave.buffer.pose_twist_linear_x = get_pose_twist_linear();
     slave.buffer.pose_twist_angle_z  = get_pose_twist_angle();
