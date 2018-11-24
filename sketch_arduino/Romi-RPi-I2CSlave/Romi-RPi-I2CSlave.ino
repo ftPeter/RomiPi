@@ -47,8 +47,8 @@ struct Data
   float pose_x, pose_y, pose_th_rad;     // 17,18,19,20,   21,22,23,24,   25,26,27,28,
   float pose_quat_z, pose_quat_w;   //  29,30,31,32,   33,34,35,36,
   float pose_twist_linear_x, pose_twist_angle_z; // 37,38,39,40,   41,42,43,44,
-  float pose_left_vel_target_meter_per_sec, pose_right_vel_target_meter_per_sec; //   45,46,47,48, 49,50,51,52,  
-  
+  float pose_left_vel_target_meter_per_sec, pose_right_vel_target_meter_per_sec; //   45,46,47,48, 49,50,51,52,
+
   // twist setting from PI
   float twist_linear_x, twist_angle_z; // 53,54,55,56,   57, 58, 59, 60
 };
@@ -114,8 +114,7 @@ void loop()
 
   // update encoders
   if (slave.buffer.resetEncoders)
-  {
-    // reset and update encoder buffer
+  { // reset and update encoder buffer
     slave.buffer.resetEncoders = 0;
     slave.buffer.leftEncoder   = encoders.getCountsAndResetLeft();
     slave.buffer.rightEncoder  = encoders.getCountsAndResetRight();

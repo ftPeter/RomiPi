@@ -4,70 +4,42 @@
      TODO : Integral term of PID seems broken. Try to tune at some point.
 */
 
-
-/* methods for handling twist commands and converting them 
- *  to target motor velocities
- */
-
-/* motor velocity targets */
-float left_vel_target_meter_per_sec  = 0.0;
-float right_vel_target_meter_per_sec = 0.0;
-
-void set_wheel_target_velocity(float left, float right) {
-  left_vel_target_meter_per_sec = left;
-  right_vel_target_meter_per_sec = right;
-}
-
-float get_left_wheel_target_velocity() {
-  return left_vel_target_meter_per_sec;
-}
-
-float get_right_wheel_target_velocity() {
-  return right_vel_target_meter_per_sec;
-}
-
-void set_twist_target(float linear_m_s, float angle_rad_s) {
-  // convert twist input from pi to motor velocities.
-  float right_vel = (angle_rad_s * WHEEL_SEPERATION_DIST_M) / 2.0 + linear_m_s;
-  float left_vel = (linear_m_s * 2.0) - right_vel;
-
-  set_wheel_target_velocity( left_vel, right_vel );
-}
+#include "motor.h"
 
 /* methods smoothing instantaneous wheel velocities reported by
  * the odometry methods get_instant_left_wheel_vel(), get_instant_right_wheel_vel()
  */
 
 /* arrays for calculating moving window average wheel velocity */
-const int window_size = 10;
-float left_vel_window[window_size];
-float right_vel_window[window_size];
+const int _window_size = 10;
+float _left_vel_window[_window_size];
+float _right_vel_window[_window_size];
 
-float get_left_average_wheel_velocity() {
+float _pid_get_left_average_wheel_velocity() {
   // average instantaneous left wheel velocity
   // in meters per second
   float average = 0;
   static int i;
-  left_vel_window[i++] = get_instant_left_wheel_vel();
-  if( i >= window_size ) { i = 0; }
-  for(int j = 0; j < window_size; j++) {
-    average += left_vel_window[i];
+  _left_vel_window[i++] = get_instant_left_wheel_vel();
+  if( i >= _window_size ) { i = 0; }
+  for(int j = 0; j < _window_size; j++) {
+    average += _left_vel_window[i];
   }
-  average /= window_size;
+  average /= _window_size;
   return average;
 }
 
-float get_right_average_wheel_velocity() {
+float _pid_get_right_average_wheel_velocity() {
   // average instantaneous right wheel velocity
   // in meters per second
   float average = 0;
   static int i;
-  right_vel_window[i++] = get_instant_right_wheel_vel();
-  if ( i >= window_size ) { i = 0;}
-  for (int j = 0; j < window_size; j++) {
-    average += right_vel_window[i];
+  _right_vel_window[i++] = get_instant_right_wheel_vel();
+  if ( i >= _window_size ) { i = 0;}
+  for (int j = 0; j < _window_size; j++) {
+    average += _right_vel_window[i];
   }
-  average /= window_size;
+  average /= _window_size;
   return average;
 }
 
@@ -76,7 +48,7 @@ float get_right_average_wheel_velocity() {
  *  constraint the motor speed within the motor power limit
  *  then set the speeds
  */
-void setMotorSpeeds(int16_t left_motor, int16_t right_motor,
+void _pid_setMotorSpeeds(int16_t left_motor, int16_t right_motor,
                     float left_error, float right_error,
                     float *left_integral, float *right_integral,
                     float duration_s ) {
@@ -126,8 +98,8 @@ void doPID() {
   float duration_s = 1000.0 * float(duration_ms);
 
   /* CALCULATE ERROR : error = target - measured */
-  float left_error  = get_left_wheel_target_velocity() - get_left_average_wheel_velocity();
-  float right_error = get_right_wheel_target_velocity() - get_right_average_wheel_velocity();
+  float left_error  = get_left_wheel_target_velocity() - _pid_get_left_average_wheel_velocity();
+  float right_error = get_right_wheel_target_velocity() - _pid_get_right_average_wheel_velocity();
 
   /* PID CALCULATIONS*/
   left_integral  = left_integral  + (left_error * duration_s);
@@ -138,7 +110,7 @@ void doPID() {
   int16_t left_motor  = int16_t(Kp * left_error  + Ki * left_integral  + Kd * left_derivative);
   int16_t right_motor = int16_t(Kp * right_error + Ki * right_integral + Kd * right_derivative);
 
-  setMotorSpeeds(left_motor, right_motor,
+  _pid_setMotorSpeeds(left_motor, right_motor,
                  left_error, right_error,
                  &left_integral, &right_integral,
                  duration_s);
