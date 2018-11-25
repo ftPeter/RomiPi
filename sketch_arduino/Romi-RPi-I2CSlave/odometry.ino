@@ -4,6 +4,8 @@
  * 
  * November 24, 2018
  */
+
+#include "motor.h"
  
 /* CURRENT POSE */
 float pose_x_m = 0;

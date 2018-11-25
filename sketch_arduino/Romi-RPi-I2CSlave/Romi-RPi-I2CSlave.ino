@@ -81,6 +81,9 @@ void setup()
   ledYellow(false);
   ledGreen(true);
   ledRed(false);
+
+  // start motor PID
+  pid_setup();
 }
 
 void loop()

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /* motor_cmd_twist
  * 
  * methods for handling twist commands and converting them 

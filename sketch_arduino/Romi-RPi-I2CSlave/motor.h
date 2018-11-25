@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /*  motor.h
  *  
  *  function prototypes and constants related to the motor system.

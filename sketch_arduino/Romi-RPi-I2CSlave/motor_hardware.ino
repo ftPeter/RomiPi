@@ -20,9 +20,9 @@ int debug_get_right_motor_power() {
   return debug_right_motor_power;
 }
 
-void hw_motors_setspeeds(int left, int right) {
-  int left_motor = left * FLIP_MOTOR_DIR;
-  int right_motor = right * FLIP_MOTOR_DIR;
+void hw_motors_setspeeds(double left, double right) {
+  int left_motor = int(left * float(FLIP_MOTOR_DIR));
+  int right_motor = int(right * float(FLIP_MOTOR_DIR));
   if ( SWAP_MOTORS ) {
     debug_left_motor_power = left_motor;
     debug_right_motor_power = right_motor;
