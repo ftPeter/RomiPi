@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 /*  motor.h
  *  
  *  function prototypes and constants related to the motor system.
@@ -53,4 +53,3 @@ float get_right_wheel_target_velocity();
 void set_twist_target(float linear_m_s, float angle_rad_s);
 
 #endif //_MOTOR_H
-

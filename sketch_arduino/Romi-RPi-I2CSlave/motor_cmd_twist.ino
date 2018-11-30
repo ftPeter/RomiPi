@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 /* motor_cmd_twist
  * 
  * methods for handling twist commands and converting them 
@@ -33,4 +33,3 @@ void set_twist_target(float linear_m_s, float angle_rad_s) {
 
   set_wheel_target_velocity( left_vel, right_vel );
 }
-
