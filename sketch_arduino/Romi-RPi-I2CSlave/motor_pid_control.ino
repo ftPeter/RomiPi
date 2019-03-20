@@ -83,9 +83,9 @@ void _pid_setMotorSpeeds(int16_t left_motor, int16_t right_motor,
 
 void doPID() {
   /* PID AND MOTOR CONSTANTS */
-  const float Kp = 300;
-  const float Ki = 0.0;
-  const float Kd = 10;
+  const float Kp = 2000.0;
+  const float Ki = 7000.0;
+  const float Kd = 0.0;
 
   /* STATIC VARIABLES */
   static unsigned long prev_time_ms;
@@ -95,11 +95,11 @@ void doPID() {
   /* TIME DURATION SINCE LAST UPDATE */
   unsigned long current_time_ms = millis();
   long duration_ms = current_time_ms - prev_time_ms;
-  float duration_s = 1000.0 * float(duration_ms);
+  float duration_s = float(duration_ms)/1000.0;
 
   /* CALCULATE ERROR : error = target - measured */
-  float left_error  = get_left_wheel_target_velocity() - _pid_get_left_average_wheel_velocity();
-  float right_error = get_right_wheel_target_velocity() - _pid_get_right_average_wheel_velocity();
+  float left_error  = get_left_wheel_target_velocity() - get_instant_left_wheel_vel();
+  float right_error = get_right_wheel_target_velocity() - get_instant_right_wheel_vel();
 
   /* PID CALCULATIONS*/
   left_integral  = left_integral  + (left_error * duration_s);

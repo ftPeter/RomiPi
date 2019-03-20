@@ -13,6 +13,7 @@ parser.add_argument('twist_angular', type=float,
                     help='angular component of twist in deg/s')
 parser.add_argument('time', type=float, 
                     help='time in seconds')
+
 args = parser.parse_args()
 print(args)
 
