@@ -11,6 +11,8 @@ parser.add_argument('twist_linear', type=float,
                     help='linear component of twist in m/s')
 parser.add_argument('twist_angular', type=float, 
                     help='angular component of twist in deg/s')
+parser.add_argument('time', type=float, 
+                    help='time in seconds')
 args = parser.parse_args()
 print(args)
 
@@ -33,6 +35,8 @@ def monitor_pose():
 
 
 romi.twist(args.twist_linear, args.twist_angular)
+time.sleep(args.time)
+romi.twist(0.0,0.0)
 
 if args.twist_linear == 0.0 and args.twist_angular == 0.0:
     romi.pixels(0,0,255)
