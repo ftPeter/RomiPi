@@ -133,29 +133,42 @@ class AStar:
         print("Battery:          ", self.read_battery_millivolts(), " mV")
         print "Commands:"
         print "Encoders (l,r):  ", self.read_encoders()
-        print "Motor Targets (l,r): ", self.read_pose_motors()
         print "Commanded Twist (linear m/s, rotation rad/s: %0.1f, %0.1f" % self.read_twist()
         print "Estimates:"
         print "Estimated Twist (linear m/s, rotation rad/s): %0.2f, %0.2f" % self.read_pose_twist()
         print "Estimated Pose (x m,y m, theta rad): %0.1f, %0.1f %0.1f" % self.read_pose_coordinate()
+        print "Estimated wheel velocity (l,r): ", self.read_pose_motors()
         print "Estimated Quaternion (z,w): %0.2f, %0.2f" % self.read_quat()
 
-# Self Test
+    def square(self):
+        for i in range(4):
+            self.twist(0.2,0.0)
+            time.sleep(1.0)
+            self.twist(0.0, 3.14/2)
+            time.sleep(1.0)
+    def line(self):
+        self.twist(0.2,0.0)
+        time.sleep(1.0)
+        self.twist(0.0, 3.14)
+        time.sleep(1.0)
+        self.twist(0.2,0.0)
+        time.sleep(1.0)
+
+    def circle(self):
+        self.twist(2*3.14*0.2/8,2*3.14/8)
+        time.sleep(8.0)
+
+
+# Self Ttest
 if __name__ == '__main__':
     romi = AStar()
     romi.reset_encoders()
     print("Firmware Version: ", romi.read_firmware_version())
     print("Battery:          ", romi.read_battery_millivolts(), " mV")
     print("Encoders (l,r):  ", romi.read_encoders() )
-    romi.twist(0.5, 0.0)
     try:
-    	while True:
-        	print("Encoders (l,r):  ", romi.read_encoders())
-        	print("Motor Targets (l,r):", romi.read_pose_motors())
-        	print("Twist (l,r):", romi.read_pose_twist())
-        	print("Pose (x,y):", romi.read_pose_coordinate())
-        	print("Quaternion (z,w):", romi.read_quat())
-        	time.sleep(0.5)
+         romi.circle()
+    
     except: 
-    	pass
+        pass
     romi.twist(0,0)
