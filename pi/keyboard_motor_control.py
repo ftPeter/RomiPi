@@ -42,9 +42,9 @@ while True:
     elif c.upper() == 'S': # back
         linear_ms -= 0.1
     elif c.upper() == 'A': # left
-        rotate_rads += 0.1
+        rotate_rads += 3.14 * 2.0 / 8.0
     elif c.upper() == 'D': # right
-        rotate_rads -= 0.1
+        rotate_rads -= 3.14 * 2.0 / 8.0
     elif c.upper() == 'Z': # halt
         linear_ms = 0.0
         rotate_rads = 0.0
