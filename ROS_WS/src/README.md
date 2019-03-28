@@ -1,3 +1,8 @@
+contents:
+README.md - this file
+romipi - ROS source for the romipi node
+Romi Operation.perspective - rqt perspective for the romipi robot
+
 add to .bashrc
 source ~/catkin_ws/devel/setup.bash
 cd ~/catkin_ws/src && ln -s ~/multi-robotics/robots/Romi-All/ROS/romipi romipi
