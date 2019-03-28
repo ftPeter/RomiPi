@@ -11,6 +11,11 @@ Keyboard Teleoperation
 
 RemotePC$ roslaunch romipi_teleop romipi_teleop_key.launch
 
+Joystick Teleoperation
+
+RemotePC$ roslaunch romipi_teleop romipi_teleop_ds4_joy.launch
+RemotePC$ rosrun romipi_astar  romipi_astar_node.py
+
 Monitor Robot with rqt
  
 RemotePC$ rqt
