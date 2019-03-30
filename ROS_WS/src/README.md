@@ -1,3 +1,8 @@
+contents:
+README.md - this file
+romipi - ROS source for the romipi node
+Romi Operation.perspective - rqt perspective for the romipi robot
+
 add to .bashrc
 source ~/catkin_ws/devel/setup.bash
 cd ~/catkin_ws/src && ln -s ~/multi-robotics/robots/Romi-All/ROS/romipi romipi
@@ -10,6 +15,11 @@ RomiPi$ roslaunch romipi_bringup romipi_robot.launch
 Keyboard Teleoperation
 
 RemotePC$ roslaunch romipi_teleop romipi_teleop_key.launch
+
+Joystick Teleoperation
+
+RemotePC$ roslaunch romipi_teleop romipi_teleop_ds4_joy.launch
+RemotePC$ rosrun romipi_astar  romipi_astar_node.py
 
 Monitor Robot with rqt
  
