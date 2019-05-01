@@ -5,7 +5,7 @@
 # * cmd_vel -> sends to astar
 
 import rospy
-from romipi_driver import AStar
+from romipi_astar.romipi_driver import AStar
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist
 
