@@ -37,6 +37,7 @@ def monitor_pose():
 
 romi.twist(args.twist_linear, args.twist_angular)
 time.sleep(args.time)
+romi.twist(0.0,0.0)
 
 if args.twist_linear == 0.0 and args.twist_angular == 0.0:
     romi.pixels(0,0,255)

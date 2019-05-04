@@ -71,10 +71,12 @@ int prev_left_count_ticks, prev_right_count_ticks;
 void setup()
 {
   // Set up the slave at I2C address 20.
+  // NOTE: the address of 20 below and 20 us delay above 
+  //       are just a coincidence, not a typo.
   slave.init(20);
 
   // Play startup sound.
-  buzzer.play("v10>>g16>>>c16");
+  buzzer.play("v10>>e16>>>g16");
 
   lights_init();
 
