@@ -140,7 +140,7 @@ def romipi_astar_node():
 
     battery_publisher = rospy.Publisher('battery_state', BatteryState, queue_size = 2)
     odom_state_publisher = rospy.Publisher('odom', Odometry, queue_size = 2)
-    joint_state_publisher = rospy.Publisher('joint_state', JointState, queue_size = 2)
+    joint_state_publisher = rospy.Publisher('joint_states', JointState, queue_size = 2)
     tf_broadcaster = TransformBroadcaster()
 
     rospy.Subscriber('cmd_vel', Twist, cmd_vel_callback)

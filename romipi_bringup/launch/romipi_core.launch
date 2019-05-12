@@ -1,4 +1,4 @@
 <launch>
-  <node pkg=romipi_i2c" type="romi_i2c.py" name="romipi_core" output="screen">
+  <node pkg="romipi_astar" type="romipi_astar_node.py" name="romipi_core" output="screen">
   </node>
 </launch>

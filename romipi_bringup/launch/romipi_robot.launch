@@ -1,5 +1,4 @@
 <launch>
-  <include file="$(find romipi_bringup)/launch/romipi_core.launch"/>
-
-  <node pkg="romipi_bringup" type="romipi_diagnostics" name="romipi_diagnostics" output="screen" />
+  <include file="$(find romipi_bringup)/launch/romipi_core.launch">
+  </include>
 </launch>
