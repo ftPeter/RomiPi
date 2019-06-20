@@ -1,0 +1,18 @@
+<package>
+  <description brief="romipi_fiducials">
+
+     romipi_fiducials
+
+  </description>
+  <author>mhc</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/romipi_fiducials</url>
+  <depend package="std_msgs"/>
+  <depend package="sensor_msgs"/>
+  <depend package="rospy"/>
+  <depend package="aruco_detect"/>
+
+</package>
+
+
