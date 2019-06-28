@@ -24,12 +24,10 @@ import threading
 
 from romipi_fiducials.pose import Pose
 
-print "board poser loading..."
-
 class BoardPoser:
     def __init__(self):
         # DEFINE TAG BOARDS
-        from boards.board_dictionary import get_board_dictionary
+        from romipi_fiducials.board_dictionary import get_board_dictionary
         self.board_dict = get_board_dictionary()
 
         # CAMERA SETUP
