@@ -20,7 +20,6 @@
 # 
 
 import rospy
-from romipi_astar.romipi_driver import AStar
 
 # message types
 from std_msgs.msg import String
@@ -32,10 +31,15 @@ import numpy as np
 import math
 import cv2.aruco as aruco
 
+import sys
+
+# romipi specific marker dictionary and localization
+import romipi_fiducials.board_poser
+
 VERBOSE = False
 
 # FIXME make this a proper ROS parameter
-camera_param_file = "/home/mhc/multi-robotics/robots/Romi-All/Romi/camera/cameraParameters-PK-RasberryPi-Camera-8MP.xml"
+camera_param_file = "/home/mhc/catkin_ws/src/RomiPi/romipi_fiducials/cameraParameters-PK-RasberryPi-Camera-8MP.xml"
 
 class FiducialsNode():
     def __init__(self):
@@ -58,6 +62,7 @@ class FiducialsNode():
         self.camera_matrix = self.read_node_matrix(camera_reader, "cameraMatrix")
         self.dist_coeffs   = self.read_node_matrix(camera_reader, "dist_coeffs")
         width, height = self.read_resolution(camera_reader) # FIXME seems unused
+
         if self.camera_matrix is None or self.dist_coeffs is None:
             print("camera configurations not loaded.")
 
@@ -65,6 +70,8 @@ class FiducialsNode():
             print("camera matrix : %s" % self.camera_matrix)
             print("distance coeffs : %s" % self.dist_coeffs)
             print("width, height : %d, %d" % (width,height))
+
+        self.poser = BoardPoser()
 
     # FIXME may not be used
     @staticmethod
@@ -87,6 +94,12 @@ class FiducialsNode():
 
         corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, self.aruco_dict)
         frame = aruco.drawDetectedMarkers(frame, corners)
+
+        # got frame, now convert send to the tool for conversion to boards and poses
+        self.poser.process_frame(frame) 
+        board_pose_dict = self.poser.get_visible_board_poses()
+        print( board_pose_dict )
+        processed_frame = self.poser.get_frame()
         return frame
 
     def romipi_fiducials_node(self):
