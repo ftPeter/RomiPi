@@ -1,10 +1,10 @@
 
 /*  motor.h
- *  
- *  function prototypes and constants related to the motor system.
- *  
- *  November 24, 2018
- */
+
+    function prototypes and constants related to the motor system.
+
+    November 24, 2018
+*/
 #ifndef _MOTOR_H
 #define _MOTOR_H
 
