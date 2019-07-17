@@ -14,7 +14,7 @@
    of motor control, analog inputs, and other low-level I/O.
 
    Make sure to set the Sketchbook location to
-   ../RomiPi/sketch_arduino
+   ../RomiPi/Arduino
 
 */
 
@@ -64,12 +64,12 @@ Romi32U4ButtonB buttonB;
 Romi32U4ButtonC buttonC;
 Romi32U4Encoders encoders;
 
-/* PREVIOUS TIME AND ENCODER VALUES */
-unsigned long last_time_ms = 0;
-int prev_left_count_ticks, prev_right_count_ticks;
+
 
 void setup()
 {
+  Serial.begin(57600);
+
   // Set up the slave at I2C address 20.
   // NOTE: the address of 20 below and 20 us delay above 
   //       are just a coincidence, not a typo.
@@ -127,6 +127,8 @@ void loop()
   if (everyNmillisec(10)) {
     // ODOMETRY
     calculateOdom();
+    doPID();
+
     // measured orientation of robot on X,Y plane
     slave.buffer.pose_x              = get_pose_x();
     slave.buffer.pose_y              = get_pose_y();
@@ -142,10 +144,37 @@ void loop()
 
     
   }
-    // update motor control
-    doPID();
-  // READING the buffer is allowed before or after finalizeWrites().
+      // READING the buffer is allowed before or after finalizeWrites().
   // When you are done WRITING, call finalizeWrites() to make modified
   // data available to I2C master.
   slave.finalizeWrites();
+
+  // COMMENT THIS OUT AFTER DEBUG
+  if (every100millisec()) {
+    Serial.print("ODOMETRY DEBUG...");
+
+    Serial.print("L: ");
+    Serial.print(get_instant_left_wheel_vel());
+    Serial.print(" m/s, R: ");
+    Serial.print(get_instant_right_wheel_vel());
+    Serial.print(" m/s. ");
+
+    Serial.print("(x: "); Serial.print(get_pose_x());
+    Serial.print("m, y: "); Serial.print(get_pose_y());
+    Serial.print("m, t: "); Serial.print(get_pose_th_rad());
+    Serial.print(" rad). ");
+
+    Serial.print("("); Serial.print(get_pose_twist_linear());
+    Serial.print(" m/s, "); Serial.print(get_pose_twist_angle());
+    Serial.print("rad/s ).");
+
+    Serial.print("PID ");
+    Serial.print(get_left_wheel_target_velocity());
+    Serial.print(", ");
+    Serial.print(get_right_wheel_target_velocity());
+    Serial.print("");
+
+    Serial.println("");
+  }
+
 }
