@@ -36,16 +36,13 @@ import sys
 # romipi specific marker dictionary and localization
 from romipi_fiducials.board_poser import BoardPoser
 
-VERBOSE = False
-
-# FIXME make this a proper ROS parameter
-camera_param_file = "/home/mhc/catkin_ws/src/RomiPi/romipi_fiducials/cameraParameters-PK-RasberryPi-Camera-8MP.xml"
+VERBOSE = False 
 
 class FiducialsNode():
     def __init__(self):
         ''' initialize subscriber from camera and publish image, fiducials '''
 
-        rospy.init_node('romipi_fiducials_node', anonymous=True)
+        rospy.init_node('romipi_fiducials_node', anonymous=True, log_level=rospy.INFO)
 
         self.image_publish = rospy.Publisher("/romipi_fiducials_node/fiducial_image/compressed", CompressedImage, queue_size=1)
 
@@ -53,24 +50,6 @@ class FiducialsNode():
             print("subscribed to /camera/image/compressed")
 
         self.compressed_camera_image = None
-
-        # configure cv2 aruco handling
-        self.aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
-        camera_reader = cv2.FileStorage()
-        camera_reader.open(camera_param_file, cv2.FileStorage_READ)
-        # camera configurations
-        self.camera_matrix = self.read_node_matrix(camera_reader, "cameraMatrix")
-        self.dist_coeffs   = self.read_node_matrix(camera_reader, "dist_coeffs")
-        width, height = self.read_resolution(camera_reader) # FIXME seems unused
-
-        if self.camera_matrix is None or self.dist_coeffs is None:
-            print("camera configurations not loaded.")
-
-        if VERBOSE :
-            print("camera matrix : %s" % self.camera_matrix)
-            print("distance coeffs : %s" % self.dist_coeffs)
-            print("width, height : %d, %d" % (width,height))
-
         self.poser = BoardPoser()
 
     # FIXME may not be used
@@ -90,40 +69,47 @@ class FiducialsNode():
         self.compressed_camera_image = ros_data
 
     def process_camera_image(self, frame):
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-        corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, self.aruco_dict)
-        frame = aruco.drawDetectedMarkers(frame, corners)
-
         # got frame, now convert send to the tool for conversion to boards and poses
         self.poser.process_frame(frame) 
         board_pose_dict = self.poser.get_visible_board_poses()
-        print( board_pose_dict )
         processed_frame = self.poser.get_frame()
-        return frame
+        return processed_frame, board_pose_dict
+
+    def ros_to_cv(self, cv_frame):
+        """ ROS image to cv2 format """
+        np_arr = np.fromstring(cv_frame.data, np.uint8)
+        frame_capture_time = cv_frame.header.stamp
+        frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        return frame, frame_capture_time
+
+    def cv_to_ros(self, cv_frame, time):
+        """ converts an opencv format frame to ros format frame """
+        ros_frame = CompressedImage()
+        ros_frame.header.stamp = time
+        ros_frame.format = "jpeg"
+        ros_frame.data = np.array(cv2.imencode('.jpg', cv_frame)[1]).tostring()
+        return ros_frame
 
     def romipi_fiducials_node(self):
+        # TODO convert this to a parameter
         camera_ros_path = "/raspicam_node/image/compressed"
         self.camera_subscriber = rospy.Subscriber(camera_ros_path, CompressedImage, self.camera_callback, queue_size = 1)
-        
+      
+        rospy.loginfo("romipi fiducials node")
+
         rate = rospy.Rate(1) # rate is hz
         while not rospy.is_shutdown():
             # read image saved by the camera_callback
             if self.compressed_camera_image is not None:
                 # ROS image to cv2 format
-                np_arr = np.fromstring(self.compressed_camera_image.data, np.uint8)
-                frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-                fiducial_frame_np = self.process_camera_image(frame)
+                frame, frame_time = self.ros_to_cv(self.compressed_camera_image)
+                fiducial_frame_np, board_pose_dict = self.process_camera_image(frame)
+                # convert processed frame to ROS format and publish
+                self.image_publish.publish(self.cv_to_ros(fiducial_frame_np, frame_time))
 
-                # convert processed frame to ROS format
-                msg = CompressedImage()
-                msg.header.stamp = rospy.Time.now()
-                msg.format = "jpeg"
-                msg.data = np.array(cv2.imencode('.jpg', fiducial_frame_np)[1]).tostring()
-                self.compressed_fiducial_image = msg
-                # publish debug image
-                self.image_publish.publish(self.compressed_fiducial_image)
-                # publish fiducial locations
+                # TODO publish board dictionary
+                # board_pose_dict
+                print(board_pose_dict)
             rate.sleep() 
         
 if __name__ == '__main__':

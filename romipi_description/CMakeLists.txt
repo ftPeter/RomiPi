@@ -3,7 +3,7 @@
 ################################################################################
 cmake_minimum_required(VERSION 2.8.3)
 project(romipi_description)
-
+add_compile_options(-pthread)
 ################################################################################
 # Find catkin packages and libraries for catkin and system dependencies
 ################################################################################
