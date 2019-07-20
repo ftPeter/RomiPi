@@ -54,11 +54,19 @@ class Pose:
         theta = self.getThetaRad()
         return rho, psi, theta
 
+    @staticmethod
+    def cm_to_m(cm):
+        return cm / 100.0
+
+    @staticmethod
+    def m_to_cm(m):
+        return m * 100.0
+
     def getX(self, unit="cm"):
         if unit is "cm":
             return self.x
         elif unit is "m":
-            return self.x * 100.0
+            return Pose.cm_to_m(self.x)
         else:
             return None
 
@@ -66,13 +74,13 @@ class Pose:
         if unit is "cm":
             self.x = x
         elif unit is "m":
-            self.x = x / 100.0
+            self.x = Pose.m_to_cm(x)
 
     def getY(self, unit="cm"):
         if unit is "cm":
             return self.y
         elif unit is "m":
-            return self.y * 100.0
+            return Pose.cm_to_m(self.y)
         else:
             return None
 
@@ -80,7 +88,7 @@ class Pose:
         if unit is "cm":
             self.y = y
         elif unit is "m":
-            self.y = y / 100.0
+            self.y = Pose.cm_to_m(y)
 
     def getTheta(self, unit="deg"):
         if unit is "deg" or unit is "Degrees":

@@ -257,8 +257,9 @@ class BoardPoser:
             #
             # tvec and rvec are in the opencv coordinate
             # system where z is forward and x is left
-            x = tvec[0][0] * -100.0
-            z = tvec[2][0] * 100.0
+            # and convert to cm for storage
+            x = Pose.m_to_cm(tvec[0][0] * -1.0)
+            z = Pose.m_to_cm(tvec[2][0])
             board_alpha_deg = -1 * np.degrees(np.arctan2(x, z))
 
             # calculate board pose
