@@ -6,6 +6,6 @@
     <param name="framerate" value="1"/>
     <param name="camera_frame_id" value="camera"/>
   </node>
-  <include file="$(find romipi_fiducials)/launch/aruco_detect.launch">
+  <include file="$(find romipi_fiducials)/launch/romipi_fiducials.launch">
   </include>
 </launch>

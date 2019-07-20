@@ -47,9 +47,7 @@ class FiducialsNode():
         rospy.init_node('romipi_fiducials_node', anonymous=True, log_level=rospy.INFO)
 
         self.image_publish = rospy.Publisher("/romipi_fiducials_node/fiducial_image/compressed", CompressedImage, queue_size=1)
-
-        if VERBOSE:
-            print("subscribed to /camera/image/compressed")
+        self.pose_publish = rospy.Publisher("/romipi_fiducials_node/observed_poses", RomiPose, queue_size=32)
 
         self.compressed_camera_image = None
         self.poser = BoardPoser()
@@ -131,7 +129,9 @@ class FiducialsNode():
                     observer = "jiffy_board" # TODO how do I find out own robot name?
                     target_pose = board_pose_dict[target]
                     ros_pose = self.pose_to_ros_pose(observer, target, target_pose, frame_header)
-                    print(ros_pose) 
+                    self.pose_publish.publish(ros_pose)
+                    if VERBOSE:
+                        print(ros_pose) 
             rate.sleep() 
         
 if __name__ == '__main__':

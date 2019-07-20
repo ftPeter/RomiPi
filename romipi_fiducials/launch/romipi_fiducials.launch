@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="romipi_fiducials" type="romipi_fiducials" name="romipi_fiducials_node" output="screen" />
+</launch>
