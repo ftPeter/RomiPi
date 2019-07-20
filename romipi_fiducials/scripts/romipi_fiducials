@@ -24,6 +24,8 @@ import rospy
 # message types
 from std_msgs.msg import String
 from sensor_msgs.msg import CompressedImage
+from geometry_msgs.msg import PoseStamped
+from romipi_msgs.msg import RomiPose
 
 # opencv2 realted
 import cv2
@@ -78,17 +80,33 @@ class FiducialsNode():
     def ros_to_cv(self, cv_frame):
         """ ROS image to cv2 format """
         np_arr = np.fromstring(cv_frame.data, np.uint8)
-        frame_capture_time = cv_frame.header.stamp
+        frame_header = cv_frame.header
         frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-        return frame, frame_capture_time
+        return frame, frame_header
 
-    def cv_to_ros(self, cv_frame, time):
+    def cv_to_ros(self, cv_frame, header):
         """ converts an opencv format frame to ros format frame """
         ros_frame = CompressedImage()
-        ros_frame.header.stamp = time
+        ros_frame.header = header
         ros_frame.format = "jpeg"
         ros_frame.data = np.array(cv2.imencode('.jpg', cv_frame)[1]).tostring()
         return ros_frame
+
+    @staticmethod
+    def pose_to_ros_pose(observer, target, pose, header):
+        romi_pose = RomiPose()
+        romi_pose.pose.header = header
+        romi_pose.observer_name = observer
+        romi_pose.target_name = target
+        romi_pose.pose.pose.position.x = pose.getX(unit="m")
+        romi_pose.pose.pose.position.y = pose.getY(unit="m")
+        romi_pose.pose.pose.position.z = 0.0 # the passed in pose has no z axis
+        qx, qy, qz, qw = pose.getQuaternion()
+        romi_pose.pose.pose.orientation.x = qx 
+        romi_pose.pose.pose.orientation.y = qy 
+        romi_pose.pose.pose.orientation.z = qz 
+        romi_pose.pose.pose.orientation.w = qw 
+        return romi_pose
 
     def romipi_fiducials_node(self):
         # TODO convert this to a parameter
@@ -102,14 +120,18 @@ class FiducialsNode():
             # read image saved by the camera_callback
             if self.compressed_camera_image is not None:
                 # ROS image to cv2 format
-                frame, frame_time = self.ros_to_cv(self.compressed_camera_image)
+                frame, frame_header = self.ros_to_cv(self.compressed_camera_image)
                 fiducial_frame_np, board_pose_dict = self.process_camera_image(frame)
                 # convert processed frame to ROS format and publish
-                self.image_publish.publish(self.cv_to_ros(fiducial_frame_np, frame_time))
+                self.image_publish.publish(self.cv_to_ros(fiducial_frame_np, frame_header))
 
                 # TODO publish board dictionary
                 # board_pose_dict
-                print(board_pose_dict)
+                for target in board_pose_dict:
+                    observer = "jiffy_board" # TODO how do I find out own robot name?
+                    target_pose = board_pose_dict[target]
+                    ros_pose = self.pose_to_ros_pose(observer, target, target_pose, frame_header)
+                    print(ros_pose) 
             rate.sleep() 
         
 if __name__ == '__main__':

@@ -10,6 +10,7 @@ March 24, 2018
 """
 
 import math
+from tf.transformations import quaternion_from_euler
 
 
 class Pose:
@@ -108,6 +109,10 @@ class Pose:
 
     def setThetaDeg(self, theta_deg):
         self.setThetaRad(math.radians(theta_deg))
+
+    def getQuaternion(self):
+        q = quaternion_from_euler(0.0, 0.0, self.getThetaRad())
+        return q
 
     def getRange(self):
         return math.sqrt(self.getX() * self.getX() + self.getY() * self.getY())
