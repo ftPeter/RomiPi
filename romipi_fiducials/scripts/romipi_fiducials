@@ -26,12 +26,14 @@ from std_msgs.msg import String
 from sensor_msgs.msg import CompressedImage
 from geometry_msgs.msg import PoseStamped
 from romipi_msgs.msg import RomiPose
+from visualization_msgs.msg import Marker, MarkerArray
 
 # opencv2 realted
 import cv2
 import numpy as np
 import math
 import cv2.aruco as aruco
+from cv_bridge import CvBridge, CvBridgeError
 
 import sys
 
@@ -46,10 +48,32 @@ class FiducialsNode():
 
         rospy.init_node('romipi_fiducials_node', anonymous=True, log_level=rospy.INFO)
 
-        self.image_publish = rospy.Publisher("/romipi_fiducials_node/fiducial_image/compressed", CompressedImage, queue_size=1)
-        self.pose_publish = rospy.Publisher("/romipi_fiducials_node/observed_poses", RomiPose, queue_size=32)
+        self.image_publish = rospy.Publisher("/romipi_fiducials_node/fiducial_image/compressed", \
+                                             CompressedImage, queue_size=1)
+        self.pose_publish = rospy.Publisher("/romipi_fiducials_node/observed_poses", \
+                                            RomiPose, queue_size=32)
+        self.viz_publish = rospy.Publisher("/romipi_fiducials_node/visualization_marker_array", \
+                                           MarkerArray, queue_size=32)
 
+        # initialize the parameters
+        # is there a better way to do this?
+        temp = rospy.get_param("~hz")
+        if temp:
+            self.update_rate_hz = temp
+        else:
+            self.update_rate_hz = rospy.set_param("~hz", 1)
+
+        temp = rospy.get_param("~this_robot_name")
+        if temp:
+            self.this_robot_name = temp
+        else:
+            self.this_robot_name = rospy.set_param("~this_robot_name", "jiffy_board")
+
+        # image related setup
+        self.bridge = CvBridge()
+        self.camera_ros_path = "/raspicam_node/image/compressed"
         self.compressed_camera_image = None
+
         self.poser = BoardPoser()
 
     # FIXME may not be used
@@ -75,45 +99,101 @@ class FiducialsNode():
         processed_frame = self.poser.get_frame()
         return processed_frame, board_pose_dict
 
-    def ros_to_cv(self, cv_frame):
+    def ros_to_cv(self, ros_img_msg):
         """ ROS image to cv2 format """
-        np_arr = np.fromstring(cv_frame.data, np.uint8)
-        frame_header = cv_frame.header
-        frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        frame_header = ros_img_msg.header
+        frame = self.bridge.compressed_imgmsg_to_cv2(ros_img_msg, 
+                                                     desired_encoding='passthrough')
         return frame, frame_header
 
-    def cv_to_ros(self, cv_frame, header):
+    def cv_to_ros(self, cv_frame):
         """ converts an opencv format frame to ros format frame """
-        ros_frame = CompressedImage()
-        ros_frame.header = header
-        ros_frame.format = "jpeg"
-        ros_frame.data = np.array(cv2.imencode('.jpg', cv_frame)[1]).tostring()
+        ros_frame = self.bridge.cv2_to_compressed_imgmsg(cv_frame, dst_format='jpg')
         return ros_frame
 
     @staticmethod
-    def pose_to_ros_pose(observer, target, pose, header):
+    def pose_to_rospose(pose, ros_pose):
+        ros_pose.position.x = pose.getX(unit="m")
+        ros_pose.position.y = pose.getY(unit="m")
+        ros_pose.position.z = 0.0 # the passed in pose has no z axis
+        qx, qy, qz, qw = pose.getQuaternion()
+        ros_pose.orientation.x = qx 
+        ros_pose.orientation.y = qy 
+        ros_pose.orientation.z = qz 
+        ros_pose.orientation.w = qw 
+   	return	
+
+    @staticmethod
+    def pose_to_marker_list(observer, target, pose, header):
+	marker_list = list()
+
+        board_marker = Marker()
+        board_marker.header = header
+	board_marker.action = Marker.ADD
+	board_marker.header.frame_id = "/odom"
+	FiducialsNode.pose_to_rospose(pose, board_marker.pose)
+        # draw the target as a cylinder
+        # (change to model or Octagon if possible?)
+	board_marker.type = Marker.CYLINDER
+	board_marker.scale.x = 0.15
+	board_marker.scale.y = 0.15
+	board_marker.scale.z = 0.08
+	board_marker.color.r = 0.5
+	board_marker.color.g = 0.5
+	board_marker.color.b = 0.5
+	board_marker.color.a = 1.0
+
+        arrow_marker = Marker()
+        arrow_marker.header = header
+	arrow_marker.action = Marker.ADD
+	arrow_marker.header.frame_id = "/odom"
+	FiducialsNode.pose_to_rospose(pose, arrow_marker.pose)
+        # indicate orientation with arrow
+	arrow_marker.type = Marker.ARROW
+	arrow_marker.scale.x = 0.17
+	arrow_marker.scale.y = 0.05
+	arrow_marker.scale.z = 0.08
+	arrow_marker.color.r = 1.0
+	arrow_marker.color.g = 0.0
+	arrow_marker.color.b = 0.0
+	arrow_marker.color.a = 1.0
+
+	text_marker = Marker()
+	text_marker.header = arrow_marker.header
+	text_marker.action = Marker.ADD
+	FiducialsNode.pose_to_rospose(pose, text_marker.pose)
+        text_marker.pose.position.z += 0.1
+	# draw the text marker with robot name (target)
+	text_marker.type = Marker.TEXT_VIEW_FACING
+	text_marker.scale.z = 0.1
+	text_marker.color.r = 0.0
+	text_marker.color.g = 0.0
+	text_marker.color.b = 1.0
+	text_marker.color.a = 1.0
+	text_marker.text = target
+
+	marker_list.append(board_marker)
+	marker_list.append(arrow_marker)
+	marker_list.append(text_marker)
+        return marker_list
+
+    @staticmethod
+    def pose_to_romi_pose(observer, target, pose, header):
         romi_pose = RomiPose()
         romi_pose.pose.header = header
         romi_pose.observer_name = observer
         romi_pose.target_name = target
-        romi_pose.pose.pose.position.x = pose.getX(unit="m")
-        romi_pose.pose.pose.position.y = pose.getY(unit="m")
-        romi_pose.pose.pose.position.z = 0.0 # the passed in pose has no z axis
-        qx, qy, qz, qw = pose.getQuaternion()
-        romi_pose.pose.pose.orientation.x = qx 
-        romi_pose.pose.pose.orientation.y = qy 
-        romi_pose.pose.pose.orientation.z = qz 
-        romi_pose.pose.pose.orientation.w = qw 
+	FiducialsNode.pose_to_rospose(pose, romi_pose.pose.pose)
         return romi_pose
 
     def romipi_fiducials_node(self):
         # TODO convert this to a parameter
-        camera_ros_path = "/raspicam_node/image/compressed"
-        self.camera_subscriber = rospy.Subscriber(camera_ros_path, CompressedImage, self.camera_callback, queue_size = 1)
+        self.camera_subscriber = rospy.Subscriber(self.camera_ros_path, CompressedImage, \
+                                                  self.camera_callback, queue_size = 1)
       
         rospy.loginfo("romipi fiducials node")
-
-        rate = rospy.Rate(1) # rate is hz
+        
+        rate = rospy.Rate(self.update_rate_hz) 
         while not rospy.is_shutdown():
             # read image saved by the camera_callback
             if self.compressed_camera_image is not None:
@@ -121,17 +201,27 @@ class FiducialsNode():
                 frame, frame_header = self.ros_to_cv(self.compressed_camera_image)
                 fiducial_frame_np, board_pose_dict = self.process_camera_image(frame)
                 # convert processed frame to ROS format and publish
-                self.image_publish.publish(self.cv_to_ros(fiducial_frame_np, frame_header))
+                self.image_publish.publish(self.cv_to_ros(fiducial_frame_np ))
 
-                # TODO publish board dictionary
+                # publish board dictionary
                 # board_pose_dict
+		marker_array_msg = MarkerArray()
+		marker_list = []
                 for target in board_pose_dict:
-                    observer = "jiffy_board" # TODO how do I find out own robot name?
+                    observer = self.this_robot_name 
                     target_pose = board_pose_dict[target]
-                    ros_pose = self.pose_to_ros_pose(observer, target, target_pose, frame_header)
+                    ros_pose = self.pose_to_romi_pose(observer, target, target_pose, frame_header)
                     self.pose_publish.publish(ros_pose)
+                    marker_list.extend(self.pose_to_marker_list(observer, target, target_pose, frame_header))
                     if VERBOSE:
                         print(ros_pose) 
+                
+                marker_array_msg.markers.extend(marker_list)
+		# don't forget to renumber so that all appear!
+		for index, marker in enumerate(marker_array_msg.markers):
+		    marker.id = index
+
+		self.viz_publish.publish(marker_array_msg)
             rate.sleep() 
         
 if __name__ == '__main__':
