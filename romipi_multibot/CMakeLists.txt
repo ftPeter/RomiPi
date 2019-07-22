@@ -2,14 +2,17 @@
 # Set minimum required version of cmake, project name and compile options
 ################################################################################
 cmake_minimum_required(VERSION 2.8.3)
-project(romipi_description)
-add_compile_options(-pthread)
+project(romipi_multibot)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+# add_compile_options(-std=c++11)
+
 ################################################################################
 # Find catkin packages and libraries for catkin and system dependencies
 ################################################################################
 find_package(catkin REQUIRED COMPONENTS
-  urdf
-  xacro
+  rospy
+  std_msgs
 )
 
 ################################################################################
@@ -28,22 +31,28 @@ find_package(catkin REQUIRED COMPONENTS
 # Declare catkin specific configuration to be passed to dependent projects
 ################################################################################
 catkin_package(
-  CATKIN_DEPENDS urdf xacro
+#  INCLUDE_DIRS include
+#  LIBRARIES romipi_astar
+#  CATKIN_DEPENDS rospy std_msgs
+#  DEPENDS system_lib
 )
+
 
 ################################################################################
 # Build
 ################################################################################
 include_directories(
+# include
   ${catkin_INCLUDE_DIRS}
 )
 
 ################################################################################
 # Install
 ################################################################################
-install(DIRECTORY meshes rviz urdf
+install(DIRECTORY launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
+
 
 ################################################################################
 # Test

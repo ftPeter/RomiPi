@@ -4,7 +4,7 @@
 # without setting twist so that the
 # user can push the robot around
 
-from romipi_driver import AStar
+from romipi_astar.romipi_driver import AStar
 import time
 
 romi = AStar()

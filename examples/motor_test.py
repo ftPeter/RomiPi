@@ -1,7 +1,7 @@
 #!/usr/bin/python2
 #
 # Move the robot forwards and backwards
-from romipi_driver import AStar
+from romipi_astar.romipi_driver import AStar
 import time
 
 motor_delay_s = 2.0

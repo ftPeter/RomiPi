@@ -1,0 +1,6 @@
+Items remining to complete with this project.
+
+* Launch File: launches fiducial marking instead of aruco_detect as it currently does
+* Longer term, detect tags with aruco_detect package instead of rolling my own
+
+
