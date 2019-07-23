@@ -38,6 +38,9 @@ from cv_bridge import CvBridge, CvBridgeError
 # romipi specific marker dictionary and localization
 from romipi_fiducials.board_poser import BoardPoser
 
+# GetPose Service
+from romipi_fiducials.get_pose_service import GetPoseService 
+
 VERBOSE = False 
 
 class FiducialsNode():
@@ -71,6 +74,9 @@ class FiducialsNode():
         self.bridge = CvBridge()
         self.camera_ros_path = "/raspicam_node/image/compressed"
         self.compressed_camera_image = None
+
+        # create the get pose service provider
+        self.pose_service = GetPoseService()
 
         self.poser = BoardPoser()
 
@@ -185,11 +191,11 @@ class FiducialsNode():
         return romi_pose
 
     def romipi_fiducials_node(self):
-        # TODO convert this to a parameter
         self.camera_subscriber = rospy.Subscriber(self.camera_ros_path, CompressedImage, \
                                                   self.camera_callback, queue_size = 1)
-      
         rospy.loginfo("romipi fiducials node")
+        self.pose_service.start_get_pose_service()
+        rospy.loginfo("romipi fiducials service")
         
         rate = rospy.Rate(self.update_rate_hz) 
         while not rospy.is_shutdown():
@@ -208,9 +214,15 @@ class FiducialsNode():
                 for target in board_pose_dict:
                     observer = self.this_robot_name 
                     target_pose = board_pose_dict[target]
+
                     # TODO translate target pose from camera to odom world model
                     ros_pose = self.pose_to_romi_pose(observer, target, target_pose, frame_header)
                     self.pose_publish.publish(ros_pose)
+
+                    # store the observation to the get pose service
+                    self.pose_service.store_pose(target, ros_pose.pose)
+
+                    # prepare rviz marker list
                     marker_list.extend(self.pose_to_marker_list(observer, target, target_pose, frame_header))
                     if VERBOSE:
                         print(ros_pose) 
