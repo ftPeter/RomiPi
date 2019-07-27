@@ -45,7 +45,7 @@ class RomiPi():
         # with the velocity
         linear_x = data.linear.x
         angular_z = data.angular.z
-        rospy.loginfo(rospy.get_caller_id() + " forward %s, rotation %s", linear_x, angular_z)
+        #rospy.loginfo(rospy.get_caller_id() + " forward %s, rotation %s", linear_x, angular_z)
         self.romi.twist(linear_x, angular_z)    
 
     def broadcast_tf_msg(self, broadcaster):
