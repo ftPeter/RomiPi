@@ -20,6 +20,12 @@ class PoseStorage():
     def __init__(self):
         self.poses = {}
 
+    def reset(self):
+        self.poses = {}
+
+    def get_visible(self):
+        return self.poses.keys()
+
     def store(self, name, pose):
         self.poses[name] = pose
 
