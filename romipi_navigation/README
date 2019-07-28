@@ -1,0 +1,7 @@
+romipi_navigation
+
+In general, this node is commands the robot to move: cmd_vel.
+* first pass is a simple follower that interprets the board in front
+  and moves forwards and backwards to maintain a fixed distance
+  behind the other board.
+
