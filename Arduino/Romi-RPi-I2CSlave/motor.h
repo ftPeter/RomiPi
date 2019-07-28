@@ -19,8 +19,8 @@ const float METERS_PER_TICK = (PI * WHEEL_DIAM_M) / TICKS_PER_ROTATION;
 
 
 /* MOTOR CONSTANTS */
-const int  MOTOR_MAX = 300, MOTOR_MIN = -300;
-const int  FLIP_MOTOR_DIR = -1;
+const int16_t  MOTOR_MAX = 300, MOTOR_MIN = -300;
+const int16_t  FLIP_MOTOR_DIR = -1;
 const bool SWAP_MOTORS = false;
 
 
@@ -31,7 +31,7 @@ const int16_t MIN_INT16 = -32768;
 const int16_t ENCODER_WIN_HIGH = MAX_INT16 * 0.7;
 const int16_t ENCODER_WIN_LOW  = MIN_INT16 * 0.7;
 
-const int FLIP_ENCODER_DIR = -1;
+const int16_t FLIP_ENCODER_DIR = -1;
 const bool SWAP_ENCODERS = true;
 
 
@@ -40,11 +40,11 @@ void doPID();
 
 
 /* MOTOR_HARDWARE PROTOTYPES */
-int debug_get_left_motor_power();
-int debug_get_right_motor_power();
-void hw_motors_setspeeds(int left, int right);
-int hw_getencoder_left();
-int hw_getencoder_right();
+int16_t debug_get_left_motor_power();
+int16_t debug_get_right_motor_power();
+void hw_motors_setspeeds(int16_t left, int16_t right);
+int16_t hw_getencoder_left();
+int16_t hw_getencoder_right();
 
 
 /* MOTOR_CMD_TWIST PROTOTYPES */

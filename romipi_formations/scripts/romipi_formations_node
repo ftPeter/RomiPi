@@ -30,14 +30,13 @@ class FormationsNode():
                                              MarkerArray, queue_size=2)
 
         # parameters
+        # FIXME make a parameter
         self.fiducial_node_path  = "/romipi_fiducials_node"
         self.observed_poses_path = "/romipi_fiducials_node/observed_poses"
         self.update_rate_hz = 1.0
         # which formation
-        # FIXME make a parameter
         self.formation_name = "line"
-        # who am I? 
-        # FIXME make a parameter
+        # who am I?
         self.romi_board_name = "jiffy_board"
 
     def observed_poses_callback(self, data):
