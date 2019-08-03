@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 # get_pose_service.py
 
+import rospy
+
 from romipi_fiducials.srv import GetPose, GetPoseResponse
 from romipi_fiducials.srv import ResetVisible, ResetVisibleResponse
 from romipi_fiducials.srv import GetVisible, GetVisibleResponse
-from geometry_msgs.msg import PoseStamped, NameList
-import rospy
+
+from romipi_msgs.msg import NameList
+from geometry_msgs.msg import PoseStamped
 
 from romipi_fiducials.store_poses import PoseStorage
 
@@ -23,13 +26,14 @@ class GetPoseService():
             # pose not found!
             return GetPoseResponse(found, PoseStamped())
 
-    def handle_reset_visible(self):
+    def handle_reset_visible(self, req):
         self.storage.reset()
-        return
+        return ResetVisibleResponse()
 
-    def handle_get_visible(self):
-        visible_list = self.storage.get_visible()
-        return GetVisibleResponse(visible_list, NameList())
+    def handle_get_visible(self, req):
+        resp = NameList()
+        resp.names = self.storage.get_visible()
+        return GetVisibleResponse( resp )
 
     def store_pose(self, name, pose):
         self.storage.store(name, pose)
@@ -38,8 +42,8 @@ class GetPoseService():
     def start_get_pose_service(self):
         self.storage = PoseStorage()
         """ start the get pose service """
-        s = rospy.Service('~reset', ResetVisible, self.handle_reset_visible())
-        s = rospy.Service('~get_visible', GetVisible, self.handle_get_visible())
+        s = rospy.Service('~reset', ResetVisible, self.handle_reset_visible)
+        s = rospy.Service('~get_visible', GetVisible, self.handle_get_visible)
         s = rospy.Service('~get_pose', GetPose, self.handle_get_pose)
 
     def _test_pose_server(self):

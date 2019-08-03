@@ -1,2 +1,3 @@
 ---
-std_msgs/PoseStamped pose
+romipi_msgs/NameList visible_robots
+

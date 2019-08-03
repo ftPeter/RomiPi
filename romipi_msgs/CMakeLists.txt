@@ -53,6 +53,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
    FILES
    RomiPose.msg
+   NameList.msg
 )
 
 ## Generate services in the 'srv' folder
