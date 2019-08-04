@@ -1,0 +1,67 @@
+#!/usr/bin/env python
+#
+# romipi_wave_node
+#
+# Peter F. Klemperer
+# August 2, 2019
+#
+
+import rospy
+from std_srvs.srv import Trigger
+from romipi_wave.srv import IsActive
+from romipi_wave.srv import GetWave
+
+from romipi_wave.wave import WaveNode
+class ROSWaveNode():
+    def __init__(self):
+        ''' initialize wave node '''
+        rospy.init_node('romipi_fiducials_node', anonymous=True, log_level=rospy.INFO)
+
+        # initialize the parameters
+        # wave that this robot is assigned to
+        if rospy.has_param("~name"):
+            self.name = rospy.get_param("~name")
+        else:
+            self.name = rospy.set_param("~name", "unnamed")
+
+        # wave that this robot is assigned to
+        if rospy.has_param("~assigned_wave"):
+            self.assigned_wave = rospy.get_param("~assigned_wave")
+        else:
+            self.assigned_wave = rospy.set_param("~assigned_wave", -1)
+
+        # initialize the list of nodes
+        if rospy.has_param("~node_list"):
+            self.node_list = rospy.get_param("~node_list")
+        else:
+            self.node_list = rospy.set_param("~node_list", ['jiffy.local'])
+
+        self.wave_node = WaveNode(self.name, self.assigned_wave, self.node_list)
+        return
+
+    def handle_action_complete(self, req):
+        print "action complete callback"
+        return (True, "Action Complete Recorded")
+
+    def handle_is_active(self, req):
+        print "is active callback"
+        return True
+
+    def handle_get_wave(self, req):
+        print "get wave callback"
+        return -1
+
+    def romipi_wave_node(self):
+        s = rospy.Service('~action_complete', Trigger, self.handle_action_complete)
+        s = rospy.Service('~is_active', IsActive, self.handle_is_active)
+        s = rospy.Service('~get_wave', GetWave, self.handle_get_wave)
+        rospy.spin()
+        return
+
+if __name__ == '__main__':
+    try:
+        wave = ROSWaveNode()
+        wave.romipi_wave_node()
+    except rospy.ROSInterruptException:
+        pass
+
