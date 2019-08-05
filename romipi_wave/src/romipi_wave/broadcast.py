@@ -136,13 +136,13 @@ def test_node():
         test_client("localhost", 49152, pickle.dumps(("TEST", "two")))
         test_client("localhost", 49152, pickle.dumps(("TEST", "three")))
 
-        # make sure server has time to process the clients.
-        import time
-        time.sleep(0.01)
-
-    except:
+        while True:
+            pass
+    except KeyboardInterrupt:
         print("KeyboardInterrupt has been caught.")
-        node.stop_server()
+
+
+    node.stop_server()
 
 if __name__ == '__main__':
     test_node()
