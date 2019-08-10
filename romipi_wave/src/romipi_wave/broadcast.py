@@ -191,7 +191,7 @@ def test_node():
 
         node.join("jiffy.local")
         print(node.node_set)
-        node.broadcast("hello from macbook")
+        node.broadcast("hello from " + my_name)
 
         while True:
             pass
