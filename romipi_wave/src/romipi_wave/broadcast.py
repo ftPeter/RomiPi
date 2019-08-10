@@ -74,7 +74,7 @@ class BroadcastNode():
         self.server_thread.start()
 
         # add server to list of nodes
-        self.node_set.append(self.server_address)
+        self.node_set |= self.server_address
 
         return
 
