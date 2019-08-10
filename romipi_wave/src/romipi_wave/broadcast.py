@@ -29,8 +29,11 @@ class BroadcastNode():
 
         self.port = 49152
 
-        self.callback = (lambda self, m: print(m))
+        self.callback = self.test_callback
         return
+
+    def test_callback(self, message):
+        print(m)
 
     def send(self, address, pickled_message):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -55,9 +58,10 @@ class BroadcastNode():
         return ret_msg
 
     def broadcast(self, message):
-        msg = pickle.dumps(message)
+        broadcast_message = ("BROADCAST", message)
+        msg = pickle.dumps(broadcast_message)
         """ broadcast message to channel """
-        for node in self.node_set:
+        for node in self.node_set.copy():
             self.send(node, msg)
 
     def start_server(self, name):
@@ -185,7 +189,7 @@ def test_node():
 
         node.join("jiffy.local")
         print(node.node_set)
-        node.broadcast(("TEST","hello from macbook"))
+        node.broadcast("hello from macbook")
 
         node.leave()
 
