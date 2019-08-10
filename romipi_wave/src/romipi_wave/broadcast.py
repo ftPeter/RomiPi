@@ -47,11 +47,12 @@ class BroadcastNode():
         sock.connect((address,self.port))
         try:
             sock.sendall(pickled_message)
-            ret_mesg = sock.recv(4096)
+            ret_msg = sock.recv(4096)
+            ret_msg = pickle.loads(ret_msg)
         finally:
             sock.close()
 
-        return pickle.loads(ret_mesg)
+        return ret_msg
 
     def broadcast(self, message):
         msg = pickle.dumps(message)
@@ -111,7 +112,7 @@ class BroadcastNode():
         # UPDATE MY NODE_SET
         self.node_set |= subscribers_reply
         # BROADCAST JOIN
-        broadcast_message = ("JOIN", self.node_set)
+        broadcast_message = ("JOIN ", self.node_set)
         self.broadcast(broadcast_message)
         return
 
@@ -122,6 +123,8 @@ class BroadcastNode():
 
     def leave(self):
         """ unregister node with the broadcast channel """
+        leave_message = ("LEAVE", self.server_address)
+        self.broadcast(leave_message)
 
     def _process_message(self, conn, addr, mesg):
         # use conn and addr, but caller will close conn
@@ -145,7 +148,7 @@ class BroadcastNode():
         elif msg_type == "LEAVE":
             peer_name = msg_data
             print("LEAVE" + str(peer_name))
-            self.node_set.remove(peer_name)
+            self.node_set -= peer_name
         # pass message to callback
         elif msg_type == "BROADCAST":
             print("BROADCAST" + str(msg_data))
@@ -182,7 +185,7 @@ def test_node():
 
         node.join("jiffy.local")
         print(node.node_set)
-        node.broadcast(("test","hello from macbook"))
+        node.broadcast(("TEST","hello from macbook"))
 
         node.leave()
 
