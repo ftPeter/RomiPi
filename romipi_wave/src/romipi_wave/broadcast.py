@@ -148,7 +148,7 @@ class BroadcastNode():
         elif msg_type == "LEAVE":
             peer_name = msg_data
             print("LEAVE" + str(peer_name))
-            self.node_set -= peer_name
+            self.node_set.discard(peer_name)
         # pass message to callback
         elif msg_type == "BROADCAST":
             print("BROADCAST" + str(msg_data))
