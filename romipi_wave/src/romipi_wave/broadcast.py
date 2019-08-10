@@ -45,7 +45,7 @@ class BroadcastNode():
         """ send to just one node """
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(1.0)
-        sock.connect(address)
+        sock.connect((address,self.port))
         try:
             sock.sendall(pickled_message)
             ret_mesg = sock.recv(4096)
@@ -74,7 +74,7 @@ class BroadcastNode():
         self.server_thread.start()
 
         # add server to list of nodes
-        self.node_set |= self.server_address
+        self.node_set.add(self.server_address)
 
         return
 
@@ -107,7 +107,7 @@ class BroadcastNode():
         """
         # ASK FOR A NODE_SET
         viewers_mesg = ("SUBSCRIBERS", )
-        pickled_message = pickle.loads(viewers_mesg)
+        pickled_message = pickle.dumps(viewers_mesg)
         subscribers_reply = self.send_with_return(address, pickled_message)
         # UPDATE MY NODE_SET
         self.node_set |= subscribers_reply
