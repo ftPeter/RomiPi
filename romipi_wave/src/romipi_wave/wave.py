@@ -20,9 +20,10 @@ class WaveNode():
 
 if __name__ == '__main__':
     try:
-        node_list = ['jiffy.local']
-        wave = WaveNode("jiffy.local", 1, node_list)
-            wave.test_node()
+        import socket
+        my_name = socket.gethostname()
+        wave = WaveNode(my_name, 1, node_list)
+        wave.test_node()
     except rospy.ROSInterruptException:
         pass
 

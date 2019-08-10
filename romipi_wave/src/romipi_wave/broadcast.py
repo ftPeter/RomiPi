@@ -29,6 +29,8 @@ class BroadcastNode():
 
         self.port = 49152
 
+        self.server_address = (socket.gethostname(), self.port)
+
         self.callback = self.test_callback
         return
 
@@ -64,9 +66,8 @@ class BroadcastNode():
         for node in self.node_set.copy():
             self.send(node, msg)
 
-    def start_server(self, name):
+    def start_server(self):
         """ start the receiving server with handle """
-        self.server_address = (name, self.port)
 
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.bind(("0.0.0.0", self.port))
@@ -185,19 +186,19 @@ def test_node():
     try:
         my_name = socket.gethostname()
         print("gethostname()" + " = " + str(my_name))
-        node.start_server(my_name)
+
+        node.start_server()
 
         node.join("jiffy.local")
         print(node.node_set)
         node.broadcast("hello from macbook")
-
-        node.leave()
 
         while True:
             pass
     except KeyboardInterrupt:
         print("KeyboardInterrupt has been caught.")
 
+    node.leave()
     node.stop_server()
 
 if __name__ == '__main__':
