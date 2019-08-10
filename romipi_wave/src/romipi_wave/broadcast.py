@@ -35,7 +35,7 @@ class BroadcastNode():
         return
 
     def test_callback(self, message):
-        print(message)
+        print("broadcast_test message: " + str(message))
 
     def send(self, address, pickled_message):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
