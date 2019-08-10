@@ -177,10 +177,11 @@ def test_client(ip, port, message):
 def test_node():
     node = BroadcastNode()
     try:
-        node.start_server("192.168.0.100")
+        my_name = socket.gethostname()
+        node.start_server(my_name)
 
         node.join("jiffy.local")
-
+        print(node.node_set)
         node.broadcast(("test","hello from macbook"))
 
         node.leave()
