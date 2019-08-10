@@ -33,7 +33,7 @@ class BroadcastNode():
         return
 
     def test_callback(self, message):
-        print(m)
+        print(message)
 
     def send(self, address, pickled_message):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -141,21 +141,21 @@ class BroadcastNode():
         if msg_type == "TEST":
             print("TEST " + str(msg_data))
         elif msg_type == "SUBSCRIBERS":
-            print("SUBSCRIBERS" + str(msg_data))
+            #print("SUBSCRIBERS" + str(msg_data))
             # send list back to caller
             conn.sendall(pickle.dumps(self.node_set))
         elif msg_type == "JOIN":
             peer_node_set = msg_data
-            print("JOIN" + str(peer_node_set))
+            #print("JOIN" + str(peer_node_set))
             self.node_set |= peer_node_set
         # leave
         elif msg_type == "LEAVE":
             peer_name = msg_data
-            print("LEAVE" + str(peer_name))
+            #print("LEAVE" + str(peer_name))
             self.node_set.discard(peer_name)
         # pass message to callback
         elif msg_type == "BROADCAST":
-            print("BROADCAST" + str(msg_data))
+            #print("BROADCAST" + str(msg_data))
             self.callback(msg_data)
 
         return
