@@ -62,6 +62,7 @@ class BroadcastNode():
 
     def start_server(self, name):
         """ start the receiving server with handle """
+        self.name = name
         self.server_address = ("0.0.0.0", self.port)
 
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -74,7 +75,7 @@ class BroadcastNode():
         self.server_thread.start()
 
         # add server to list of nodes
-        self.node_set.add(self.server_address)
+        self.node_set.add(self.name)
 
         return
 
@@ -106,7 +107,7 @@ class BroadcastNode():
             * broadcast "JOIN"
         """
         # ASK FOR A NODE_SET
-        viewers_mesg = ("SUBSCRIBERS", )
+        viewers_mesg = ("SUBSCRIBERS","" )
         pickled_message = pickle.dumps(viewers_mesg)
         subscribers_reply = self.send_with_return(address, pickled_message)
         # UPDATE MY NODE_SET
@@ -149,7 +150,7 @@ class BroadcastNode():
             self.node_set.remove(peer_name)
         # pass message to callback
         elif msg_type == "BROADCAST":
-            print("JOIN" + str(msg_data))
+            print("BROADCAST" + str(msg_data))
             self.callback(msg_data)
 
         return
@@ -178,6 +179,7 @@ def test_node():
     node = BroadcastNode()
     try:
         my_name = socket.gethostname()
+        print("gethostname()" + " = " + str(my_name))
         node.start_server(my_name)
 
         node.join("jiffy.local")
