@@ -134,7 +134,10 @@ class BroadcastNode():
     def leave(self):
         """ unregister node with the broadcast channel """
         leave_message = ("LEAVE", self.server_address)
-        self.broadcast(leave_message)
+        leave_message_picked = pickle.dumps(leave_message)
+        for node in self.node_set.copy():
+            self.send(node, leave_message_picked)
+        return
 
     def _process_message(self, conn, addr, mesg):
         # use conn and addr, but caller will close conn
