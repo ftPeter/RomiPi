@@ -120,9 +120,10 @@ class BroadcastNode():
         # UPDATE MY NODE_SET
         self.node_set |= subscribers_reply
         # BROADCAST JOIN
-        broadcast_message = ("JOIN ", self.node_set)
+        broadcast_message = ("JOIN", self.node_set)
+        broadcast_message_picked = pickle.dumps(broadcast_message)
         for node in self.node_set.copy():
-            self.send(node, broadcast_message)
+            self.send(node, broadcast_message_picked)
         return
 
     def register_handler(self, handler=None):
