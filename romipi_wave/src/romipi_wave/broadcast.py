@@ -37,6 +37,9 @@ class BroadcastNode():
     def test_callback(self, message):
         print("broadcast_test message: " + str(message))
 
+    def set_callback(self, cb):
+        self.callback = cb
+
     def send(self, address, pickled_message):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect(address)
@@ -88,7 +91,7 @@ class BroadcastNode():
         while self.isActive:
             try:
                 conn, addr = self.server_socket.accept()
-                mesg = conn.recv(1024)
+                mesg = conn.recv(4096)
                 self._process_message(conn, addr, mesg)
                 conn.close()
             except socket.timeout:
@@ -158,7 +161,6 @@ class BroadcastNode():
         elif msg_type == "BROADCAST":
             #print("BROADCAST" + str(msg_data))
             self.callback(msg_data)
-
         return
 
     def __str__(self):
@@ -170,6 +172,10 @@ class BroadcastNode():
         resp += "active, node_set: "
         resp += str(self.node_set)
         return resp
+
+    def close(self):
+        self.leave()
+        self.stop_server()
 
 def test_client(ip, port, message):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
