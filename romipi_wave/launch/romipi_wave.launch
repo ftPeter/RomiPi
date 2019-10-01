@@ -1,0 +1,8 @@
+<launch>
+  <node pkg="romipi_wave" type="romipi_wave_node" name="romipi_wave_node" output="screen" >
+    <param name="name" value="jiffy.local" />
+    <param name="assigned_wave" value="1" />
+    <rosparam param="node_list">[jiffy.local, ]</rosparam>
+  </node>
+</launch>
+

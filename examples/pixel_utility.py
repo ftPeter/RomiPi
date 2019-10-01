@@ -6,7 +6,7 @@
 # 
 # Peter F. Klemperer
 # September 26, 2018
-from romipi_driver import AStar
+from romipi_astar.romipi_driver import AStar
 import argparse
 
 parser = argparse.ArgumentParser()

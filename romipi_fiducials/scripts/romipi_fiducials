@@ -8,68 +8,73 @@
 # Peter F. Klemperer
 # June 20, 2019
 #
-# Design Plan
-# 1. Basic Publisher / Subscriber
-# 2. Subscribe to images from pi
-# 3. Publish images for debug
-# 4. Open the Aruco Library
-# 5. Apply Aruco and publish the fiducials 
+# Publishes images at hz 
+# mhc@jiffy:~$ rostopic hz /romipi_fiducials_node/observed_poses 
+# subscribed to [/romipi_fiducials_node/observed_poses]
+# average rate: 11.119
+#         min: 0.001s max: 0.204s std dev: 0.09914s window: 10
+# average rate: 10.592
+#         min: 0.000s max: 0.204s std dev: 0.09866s window: 20
 #
-# Look at the C++ based example in aruco_detect.py
-# from the aruco_detect library located at:
-# 
 
 import rospy
 
 # message types
 from std_msgs.msg import String
 from sensor_msgs.msg import CompressedImage
+from geometry_msgs.msg import PoseStamped
+from romipi_msgs.msg import RomiPose
+from visualization_msgs.msg import Marker, MarkerArray
 
-# opencv2 realted
-import cv2
-import numpy as np
-import math
-import cv2.aruco as aruco
-
-import sys
+# CvBridge
+from cv_bridge import CvBridge
 
 # romipi specific marker dictionary and localization
 from romipi_fiducials.board_poser import BoardPoser
 
-VERBOSE = False
+# GetPose Service
+from romipi_fiducials.get_pose_service import GetPoseService 
 
-# FIXME make this a proper ROS parameter
-camera_param_file = "/home/mhc/catkin_ws/src/RomiPi/romipi_fiducials/cameraParameters-PK-RasberryPi-Camera-8MP.xml"
+VERBOSE = False 
 
 class FiducialsNode():
     def __init__(self):
         ''' initialize subscriber from camera and publish image, fiducials '''
 
-        rospy.init_node('romipi_fiducials_node', anonymous=True)
+        rospy.init_node('romipi_fiducials_node', anonymous=True, log_level=rospy.INFO)
 
-        self.image_publish = rospy.Publisher("/romipi_fiducials_node/fiducial_image/compressed", CompressedImage, queue_size=1)
+        self.image_publish = rospy.Publisher("/romipi_fiducials_node/fiducial_image/compressed", \
+                                             CompressedImage, queue_size=1)
+        self.pose_publish = rospy.Publisher("/romipi_fiducials_node/observed_poses", \
+                                            RomiPose, queue_size=32)
+        self.viz_publish = rospy.Publisher("/romipi_fiducials_node/visualization_marker_array", \
+                                           MarkerArray, queue_size=2)
 
-        if VERBOSE:
-            print("subscribed to /camera/image/compressed")
+        # initialize the parameters
+        if rospy.has_param("~hz"):
+            self.update_rate_hz = rospy.get_param("~hz")
+        else:
+            self.update_rate_hz = rospy.set_param("~hz", 1.0)
 
+        if rospy.has_param("~this_robot_name"):
+            self.this_robot_name = rospy.get_param("~this_robot_name")
+        else:
+            self.this_robot_name = rospy.set_param("~this_robot_name", "jiffy_board")
+
+	# currently unused
+        if rospy.has_param("~real_time_processing"):
+            self.real_time_processing_flag = rospy.get_param("~real_time_processing")
+        else:
+            self.real_time_processing_flag = rospy.set_param("~real_time_processing", True)
+
+        # image related setup
+        self.bridge = CvBridge()
+        self.camera_ros_path = "/raspicam_node/image/compressed"
         self.compressed_camera_image = None
+	self.fiducial_frame_np = None
 
-        # configure cv2 aruco handling
-        self.aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
-        camera_reader = cv2.FileStorage()
-        camera_reader.open(camera_param_file, cv2.FileStorage_READ)
-        # camera configurations
-        self.camera_matrix = self.read_node_matrix(camera_reader, "cameraMatrix")
-        self.dist_coeffs   = self.read_node_matrix(camera_reader, "dist_coeffs")
-        width, height = self.read_resolution(camera_reader) # FIXME seems unused
-
-        if self.camera_matrix is None or self.dist_coeffs is None:
-            print("camera configurations not loaded.")
-
-        if VERBOSE :
-            print("camera matrix : %s" % self.camera_matrix)
-            print("distance coeffs : %s" % self.dist_coeffs)
-            print("width, height : %d, %d" % (width,height))
+        # create the get pose service provider
+        self.pose_service = GetPoseService()
 
         self.poser = BoardPoser()
 
@@ -85,47 +90,156 @@ class FiducialsNode():
         return node.mat()
 
     def camera_callback(self, ros_data):
-        if VERBOSE:
-            print 'received image of type: "%s"' % ros_data.format
         self.compressed_camera_image = ros_data
 
+        # process and publish right away
+        # only the image gets published periodically
+        # to improve performance
+
+	# ROS image to cv2 format
+	frame, frame_header = self.ros_to_cv(self.compressed_camera_image)
+	self.fiducial_frame_np, board_pose_dict = self.process_camera_image(frame)
+	# publish pose dictionary 
+	self.publish_board_pose_dictionary(frame_header, board_pose_dict)
+
+        return
+
     def process_camera_image(self, frame):
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-        corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, self.aruco_dict)
-        frame = aruco.drawDetectedMarkers(frame, corners)
-
         # got frame, now convert send to the tool for conversion to boards and poses
         self.poser.process_frame(frame) 
         board_pose_dict = self.poser.get_visible_board_poses()
-        print( board_pose_dict )
         processed_frame = self.poser.get_frame()
-        return frame
+        return processed_frame, board_pose_dict
+
+    def ros_to_cv(self, ros_img_msg):
+        """ ROS image to cv2 format """
+        frame_header = ros_img_msg.header
+        frame = self.bridge.compressed_imgmsg_to_cv2(ros_img_msg, 
+                                                     desired_encoding='passthrough')
+        return frame, frame_header
+
+    def cv_to_ros(self, cv_frame):
+        """ converts an opencv format frame to ros format frame """
+        ros_frame = self.bridge.cv2_to_compressed_imgmsg(cv_frame, dst_format='jpg')
+        return ros_frame
+
+    @staticmethod
+    def pose_to_rospose(pose, ros_pose):
+        ros_pose.position.x = pose.getX(unit="m")
+        ros_pose.position.y = pose.getY(unit="m")
+        ros_pose.position.z = 0.0 # the passed in pose has no z axis
+        qx, qy, qz, qw = pose.getQuaternion()
+        ros_pose.orientation.x = qx 
+        ros_pose.orientation.y = qy 
+        ros_pose.orientation.z = qz 
+        ros_pose.orientation.w = qw 
+   	return	
+
+    @staticmethod
+    def pose_to_marker_list(observer, target, pose, header):
+	marker_list = list()
+
+        board_marker = Marker()
+        board_marker.header = header
+	board_marker.action = Marker.ADD
+	board_marker.header.frame_id = "/base_footprint"
+	FiducialsNode.pose_to_rospose(pose, board_marker.pose)
+        # draw the target as a cylinder
+        # (change to model or Octagon if possible?)
+	board_marker.type = Marker.CYLINDER
+	board_marker.scale.x = 0.15
+	board_marker.scale.y = 0.15
+	board_marker.scale.z = 0.08
+	board_marker.color.r = 0.5
+	board_marker.color.g = 0.5
+	board_marker.color.b = 0.5
+	board_marker.color.a = 1.0
+
+        arrow_marker = Marker()
+        arrow_marker.header = header
+	arrow_marker.action = Marker.ADD
+	arrow_marker.header.frame_id = "/base_footprint"
+	FiducialsNode.pose_to_rospose(pose, arrow_marker.pose)
+        # indicate orientation with arrow
+	arrow_marker.type = Marker.ARROW
+	arrow_marker.scale.x = 0.17
+	arrow_marker.scale.y = 0.05
+	arrow_marker.scale.z = 0.08
+	arrow_marker.color.r = 1.0
+	arrow_marker.color.g = 0.0
+	arrow_marker.color.b = 0.0
+	arrow_marker.color.a = 1.0
+
+	text_marker = Marker()
+	text_marker.header = arrow_marker.header
+	text_marker.action = Marker.ADD
+	FiducialsNode.pose_to_rospose(pose, text_marker.pose)
+        text_marker.pose.position.z += 0.1
+	# draw the text marker with robot name (target)
+	text_marker.type = Marker.TEXT_VIEW_FACING
+	text_marker.scale.z = 0.1
+	text_marker.color.r = 0.0
+	text_marker.color.g = 0.0
+	text_marker.color.b = 1.0
+	text_marker.color.a = 1.0
+	text_marker.text = target
+
+	marker_list.append(board_marker)
+	marker_list.append(arrow_marker)
+	marker_list.append(text_marker)
+        return marker_list
+
+    @staticmethod
+    def pose_to_romi_pose(observer, target, pose, header):
+        romi_pose = RomiPose()
+        romi_pose.pose.header = header
+        romi_pose.observer_name = observer
+        romi_pose.target_name = target
+	FiducialsNode.pose_to_rospose(pose, romi_pose.pose.pose)
+        return romi_pose
+
+    def publish_board_pose_dictionary(self, frame_header, board_pose_dict):
+        """ publish board dictionary to pose service and rviz marker service """
+        marker_array_msg = MarkerArray()
+        marker_list = []
+        for target in board_pose_dict:
+            observer = self.this_robot_name 
+            target_pose = board_pose_dict[target]
+
+            # TODO translate target pose from camera to base_footprint world model
+            ros_pose = self.pose_to_romi_pose(observer, target, target_pose, frame_header)
+            self.pose_publish.publish(ros_pose)
+
+            # store the observation to the get pose service
+            self.pose_service.store_pose(target, ros_pose.pose)
+
+            # prepare rviz marker list
+            marker_list.extend(self.pose_to_marker_list(observer, target, target_pose, frame_header))
+            if VERBOSE:
+                print(ros_pose) 
+        
+        # add to marker array, don't forget to renumber so that all appear!
+        marker_array_msg.markers.extend(marker_list)
+        for index, marker in enumerate(marker_array_msg.markers):
+            marker.id = index
+	self.viz_publish.publish(marker_array_msg)
+        
+        return
 
     def romipi_fiducials_node(self):
-        camera_ros_path = "/raspicam_node/image/compressed"
-        self.camera_subscriber = rospy.Subscriber(camera_ros_path, CompressedImage, self.camera_callback, queue_size = 1)
-        
-        rate = rospy.Rate(1) # rate is hz
-        while not rospy.is_shutdown():
-            # read image saved by the camera_callback
-            if self.compressed_camera_image is not None:
-                # ROS image to cv2 format
-                np_arr = np.fromstring(self.compressed_camera_image.data, np.uint8)
-                frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-                fiducial_frame_np = self.process_camera_image(frame)
+        self.camera_subscriber = rospy.Subscriber(self.camera_ros_path, CompressedImage, \
+                                                  self.camera_callback, queue_size = 1)
+        rospy.loginfo("romipi fiducials node")
+        self.pose_service.start_get_pose_service()
+        rospy.loginfo("romipi fiducials service")
 
-                # convert processed frame to ROS format
-                msg = CompressedImage()
-                msg.header.stamp = rospy.Time.now()
-                msg.format = "jpeg"
-                msg.data = np.array(cv2.imencode('.jpg', fiducial_frame_np)[1]).tostring()
-                self.compressed_fiducial_image = msg
-                # publish debug image
-                self.image_publish.publish(self.compressed_fiducial_image)
-                # publish fiducial locations
+        rate = rospy.Rate(self.update_rate_hz) 
+        while not rospy.is_shutdown():
+	    if self.fiducial_frame_np is not None:
+            	self.image_publish.publish(self.cv_to_ros(self.fiducial_frame_np ))
             rate.sleep() 
-        
+        return
+
 if __name__ == '__main__':
     try:
         fiducials = FiducialsNode()

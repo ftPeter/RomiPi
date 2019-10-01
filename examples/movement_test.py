@@ -2,7 +2,7 @@
 #
 # Move the robot
 
-from romipi_driver import AStar
+from romipi_astar.romipi_driver import AStar
 import time
 import sys
 

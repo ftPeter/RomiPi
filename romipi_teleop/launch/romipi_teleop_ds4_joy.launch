@@ -1,6 +1,6 @@
 <launch>
   <arg name="joy_config" default="ds4" />
-  <arg name="joy_dev" default="/dev/input/js0" />
+  <arg name="joy_dev" default="/dev/input/js1" />
   <arg name="config_filepath" default="$(find romipi_teleop)/config/$(arg joy_config).config.yaml" />
   
   <node pkg="joy" type="joy_node" name="joy_node">

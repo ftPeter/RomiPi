@@ -1,7 +1,7 @@
 #!/usr/bin/python2
 #
 # Move the robot forwards and backwards
-from romipi_driver import AStar
+from romipi_astar.romipi_driver import AStar
 import time
 
 import argparse
@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('twist_linear', type=float, 
                     help='linear component of twist in m/s')
 parser.add_argument('twist_angular', type=float, 
-                    help='angular component of twist in deg/s')
+                    help='angular component of twist in radians/s')
 parser.add_argument('time', type=float, 
                     help='time in seconds')
 
@@ -36,15 +36,14 @@ def monitor_pose():
 
 
 romi.twist(args.twist_linear, args.twist_angular)
-time.sleep(args.time)
-romi.twist(0.0,0.0)
 
 if args.twist_linear == 0.0 and args.twist_angular == 0.0:
     romi.pixels(0,0,255)
 else:
     romi.pixels(0,255,0)
 
-try:
-    monitor_pose()
-except (KeyboardInterrupt):
-    print("all done.")
+time.sleep(args.time)
+romi.twist(0.0,0.0)
+
+
+print("all done.")

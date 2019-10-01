@@ -64,7 +64,7 @@ def cmd_vel_callback(data):
 
     linear_x = data.linear.x
     angular_z = data.angular.z
-    rospy.loginfo(rospy.get_caller_id() + " forward %s, rotation %s", linear_x, angular_z)
+    #rospy.loginfo(rospy.get_caller_id() + " forward %s, rotation %s", linear_x, angular_z)
     
     left_motor, right_motor = twist_to_motor(linear_x, angular_z)
 
@@ -99,11 +99,11 @@ def romipi_i2c():
         left_wheel_pub.publish(left_enc)
         right_wheel_pub.publish(right_enc)
 
-        rospy.loginfo("left_motor %0.2f, right_motor %0.2f", left_motor, right_motor)
+        #rospy.loginfo("left_motor %0.2f, right_motor %0.2f", left_motor, right_motor)
         romi.motor_velocities(left_motor, right_motor)
 
         x,y,qz,qw,tx,tz = romi.read_pose()
-        rospy.loginfo("Raw Pose <= pos %0.3f,%0.3f,%0.3f, quat %0.3f,%0.3f,%0.3f,%0.3f twist %0.4f,%0.4f", x,y,0, 0,0,qz,qw, tx,tz)
+        #rospy.loginfo("Raw Pose <= pos %0.3f,%0.3f,%0.3f, quat %0.3f,%0.3f,%0.3f,%0.3f twist %0.4f,%0.4f", x,y,0, 0,0,qz,qw, tx,tz)
         romi_odom = Odometry()
         romi_odom.header.frame_id = "odom"
         romi_odom.header.stamp = rospy.Time.now()

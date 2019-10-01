@@ -24,31 +24,66 @@ import threading
 
 from romipi_fiducials.pose import Pose
 
+VERBOSE = False
+
 class BoardPoser:
     def __init__(self):
         # DEFINE TAG BOARDS
         from romipi_fiducials.board_dictionary import get_board_dictionary
         self.board_dict = get_board_dictionary()
-
+        self.aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
+        
         # CAMERA SETUP
+        # FIXME make this a proper ROS parameter
+        # FIXME do I have to re-calibrate when using the raspberry pi node 
+        #       instead of direct camera?
+        camera_param_file = "/home/mhc/catkin_ws/src/RomiPi/romipi_fiducials/cameraParameters-PK-RasberryPi-Camera-8MP.xml"
+        # configure cv2 aruco handling
+        self.aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
+        camera_reader = cv2.FileStorage()
+        camera_reader.open(camera_param_file, cv2.FileStorage_READ)
+        # camera configurations
+        self.camera_matrix = self.read_node_matrix(camera_reader, "cameraMatrix")
+        self.dist_coeffs   = self.read_node_matrix(camera_reader, "dist_coeffs")
+        width, height = self.read_resolution(camera_reader) # FIXME seems unused
+
+        if self.camera_matrix is None or self.dist_coeffs is None:
+            print("camera configurations not loaded.")
+
+        if VERBOSE :
+            print("camera matrix : %s" % self.camera_matrix)
+            print("distance coeffs : %s" % self.dist_coeffs)
+            print("width, height : %d, %d" % (width,height))
 
         return
+
+    @staticmethod
+    def read_resolution(reader):
+        node = reader.getNode("cameraResolution")
+        return int(node.at(0).real()), int(node.at(1).real())
+ 
+    @staticmethod
+    def read_node_matrix(reader, name):
+        node = reader.getNode(name)
+        return node.mat()
 
     def get_board_list(self):
         return self.get_board_dictionary().values()
 
     def process_frame(self, frame):
         """ read a new frame and process the frame. """
+        self.unprocessed_frame = frame
         self.processed_frame = None
-        self.is_processed(frame)
+        self.is_processed()
 
-    def is_processed(self, frame):
+    def is_processed(self):
         """
         process frame for markers. Generally not for users.
 
         This is written this way to allow users to always get the most updated results.
         FIXME may not be necessary to have this gated. putting this on the user is probably okay.
         """
+        frame = self.unprocessed_frame
         if self.processed_frame is None:
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  #BGR2GRAY)
             self.visible_corners, self.visible_ids, rejectedImgPoints = aruco.detectMarkers(gray, self.aruco_dict)
@@ -222,8 +257,9 @@ class BoardPoser:
             #
             # tvec and rvec are in the opencv coordinate
             # system where z is forward and x is left
-            x = tvec[0][0] * -100.0
-            z = tvec[2][0] * 100.0
+            # and convert to cm for storage
+            x = Pose.m_to_cm(tvec[0][0] * -1.0)
+            z = Pose.m_to_cm(tvec[2][0])
             board_alpha_deg = -1 * np.degrees(np.arctan2(x, z))
 
             # calculate board pose
@@ -281,6 +317,7 @@ class BoardPoser:
         return None, None, None
 
     # Checks if a matrix is a valid rotation matrix.
+    @staticmethod
     def isRotationMatrix(R) :
         Rt = np.transpose(R)
         shouldBeIdentity = np.dot(Rt, R)
@@ -288,6 +325,7 @@ class BoardPoser:
         n = np.linalg.norm(I - shouldBeIdentity)
         return n < 1e-6
 
+    @staticmethod
     def rotationMatrixToEulerAngles(R) :
         """
         Calculates rotation matrix to euler angles

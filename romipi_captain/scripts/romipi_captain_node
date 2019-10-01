@@ -1,0 +1,102 @@
+#!/usr/bin/env python
+# romipi_captain
+#
+# this program controls high-level behavior of the romipi
+#
+# Peter F. Klemperer
+# July 20, 2019
+#
+
+import rospy
+from std_msgs.msg import String
+from geometry_msgs.msg import Twist
+from romipi_msgs.msg import RomiPose
+
+danube_distance_m = 0.0
+from numpy.linalg import norm
+def danube_callback(data):
+    """ should  this be a service of romipi_fiducials_node """
+    global danube_distance_m
+    if data.target_name == "danube_board":
+        """ if data is about target danube, update danube_distance_m """
+        position = list()
+        position.append(data.pose.pose.position.x)
+        position.append(data.pose.pose.position.y)
+        position.append(data.pose.pose.position.z)
+        danube_distance_m = norm(position)
+        rospy.loginfo( "distance to danube is " + str( danube_distance_m ) )
+
+def simple_follower():
+    """ maintain constant distance from a specific robot """
+    global danube_distance_m
+    pose_sub = rospy.Subscriber("/romipi_fiducials_node/observed_poses", RomiPose, danube_callback)
+    cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+    rospy.init_node('romipi_captain', anonymous=True)
+    rate = rospy.Rate(10) # 10hz
+    while not rospy.is_shutdown():
+	twist = Twist()
+        print(danube_distance_m)
+        if (danube_distance_m - 1.0) < -0.02:
+            twist.linear.x = -0.01
+        elif (danube_distance_m - 1.0) > 0.02:
+            twist.linear.x = +0.01
+        else:
+            twist.linear.x = 0.0
+        
+        #rospy.loginfo(twist)
+        cmd_vel_pub.publish(twist)
+        rate.sleep()
+
+from romipi_fiducials.srv import GetPose
+from math import sqrt
+def get_danube_distance_m():
+    rospy.wait_for_service('/romipi_fiducials_node/get_pose')
+    try:
+        get_pose = rospy.ServiceProxy('/romipi_fiducials_node/get_pose', GetPose)
+        get_pose_msg = get_pose("kappa_board")
+        if get_pose_msg.found:
+            pose = get_pose_msg.pose.pose
+            x = pose.position.x
+            y = pose.position.y
+            z = pose.position.z
+            distance_m = sqrt(x*x + y*y + z*z)
+            return distance_m
+    except rospy.ServiceException as exc:
+        print("Service did not process request: " + str(exc))
+    return -1.0
+
+def fixed_distance():
+    """ maintain constant distance from a kappa robot """
+    global danube_distance_m
+    
+    cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+    rospy.init_node('romipi_captain', anonymous=True)
+    rate = rospy.Rate(10) # 10hz
+    while not rospy.is_shutdown():
+        danube_distance_m = get_danube_distance_m()
+        print(danube_distance_m)
+        if danube_distance_m == -1.0:
+            print "robot not found"
+            continue
+
+	twist = Twist()
+        if (danube_distance_m - 1.0) < -0.02:
+            twist.linear.x = -0.01
+        elif (danube_distance_m - 1.0) > 0.02:
+            twist.linear.x = +0.01
+        else:
+            twist.linear.x = 0.0
+        
+        rospy.loginfo(twist)
+        cmd_vel_pub.publish(twist)
+        rate.sleep()
+
+
+
+if __name__ == '__main__':
+    try:
+        #simple_follower()
+        fixed_distance()
+    except rospy.ROSInterruptException:
+	pass
+

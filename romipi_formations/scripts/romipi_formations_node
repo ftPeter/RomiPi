@@ -1,0 +1,68 @@
+#!/usr/bin/env python
+#
+# romipi_formations.py
+#
+# The purpose of this node is to direct the movement 
+# Romi base to maintain position in the formation
+# 
+# Peter F. Klemperer
+# June 22, 2019
+#
+
+import rospy
+
+# message types
+from std_msgs.msg import String
+from geometry_msgs.msg import PoseStamped, Pose
+from visualization_msgs.msg import Marker, MarkerArray
+from romipi_msgs.msg import RomiPose
+
+class FormationsNode():
+    def __init__(self):
+        ''' initialize formation'''
+        
+        rospy.init_node('romipi_formations_node', anonymous=True, log_level=rospy.INFO)
+        # publish formation target pose 
+        self.target_pose_publish = rospy.Publisher("romipi_formations_node/target_pose",
+                                                   Pose, queue_size = 1)
+        # publish formation visualization info
+        self.marker_array_publish = rospy.Publisher("/romipi_formations_node/formation_visualization_markers", \
+                                             MarkerArray, queue_size=2)
+
+        # parameters
+        # FIXME make a parameter
+        self.fiducial_node_path  = "/romipi_fiducials_node"
+        self.observed_poses_path = "/romipi_fiducials_node/observed_poses"
+        self.update_rate_hz = 1.0
+        # which formation
+        self.formation_name = "line"
+        # who am I?
+        self.romi_board_name = "jiffy_board"
+
+    def observed_poses_callback(self, data):
+        # update the target based on the formation
+        rospy.loginfo(data)
+
+    def romipi_formations_node(self):
+        self.observerved_poses_subscriber = rospy.Subscriber(self.observed_poses_path, RomiPose, \
+                                                  self.observed_poses_callback, queue_size = 1)
+
+        rospy.loginfo("romipi formations node initialized")
+        
+        rate = rospy.Rate(self.update_rate_hz) 
+        while not rospy.is_shutdown():
+            # TODO get list of formation positions for debugging
+            # TODO publish list of formation position markers for debugging
+            # TODO get list of poses
+            # TODO get poses from list
+            # TODO calculate target
+            # TODO publish target
+            rate.sleep() 
+ 
+if __name__ == '__main__':
+    try:
+        formations = FormationsNode()
+        formations.romipi_formations_node()
+    except rospy.ROSInterruptException:
+        pass
+

@@ -34,6 +34,11 @@ RomiPii2c::~RomiPii2c()
 *******************************************************************************/
 bool RomiPii2c::init()
 {
+  // initialize physical constraints
+  wheel_seperation_ = 0.08255;
+  turning_radius_   = 0.040;
+  robot_radius_     = 0.1;
+
   // initialize ROS parameter
   nh_.param("wheel_left_joint_name", joint_states_name_[LEFT],  std::string("wheel_left_joint"));
   nh_.param("wheel_right_joint_name", joint_states_name_[RIGHT],  std::string("wheel_right_joint"));

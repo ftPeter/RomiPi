@@ -21,7 +21,7 @@ class AStar:
         self.bus = smbus.SMBus(1)
         
         fw_version = self.read_firmware_version()
-        if fw_version != 14:
+        if fw_version != 15:
             raise ValueError('Incorrect Romi Firmware Version Detected %d' % fw_version)
 
     def close(self):
@@ -68,8 +68,15 @@ class AStar:
     These methods send commandd to the robot 
     to take actions
     """
+
+    def _new_twist(self):
+        """set the new twist command flag high"""
+        self.write_pack(12, '?', True)
+
     def twist(self, linear_x_m_s, angular_z_rad_s):
+        """set the new twist and then set the new twist flag"""
         self.write_pack(53, 'ff', linear_x_m_s, angular_z_rad_s)
+        self._new_twist()
 
     def read_twist(self): # mostly here for debug
         """read back the twist command sent by this driver"""
@@ -114,10 +121,6 @@ class AStar:
         
     def read_firmware_version(self):
         return self.read_unpack(0, 1, 'B')[0]
-
-    def reset_encoders(self):
-        # set the reset bit high
-        self.write_pack(12, '?', True)
 
     def read_pose_coordinate(self):
     	x, y, theta = self.read_unpack(17, 12, "fff")

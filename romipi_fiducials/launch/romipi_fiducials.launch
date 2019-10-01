@@ -1,0 +1,7 @@
+<launch>
+  <node pkg="romipi_fiducials" type="romipi_fiducials" name="romipi_fiducials_node" output="screen" >
+    <param name="hz" value="0.5" />
+    <param name="real_time_processing" value="True" />
+    <param name="this_robot_name" value="jiffy_board" />
+  </node>
+</launch>
