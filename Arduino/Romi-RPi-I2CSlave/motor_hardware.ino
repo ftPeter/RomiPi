@@ -2,6 +2,10 @@
  *  
  * hardware interface methods
  * 
+ * NOTE: the robot velocity is controlled per-wheel
+ *       velocity instead of for the twist. twist
+ *       would be preferable and may be changed in
+ *       future revisions.
  */
 
 #include "motor.h"

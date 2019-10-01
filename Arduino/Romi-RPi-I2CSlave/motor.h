@@ -1,10 +1,10 @@
 
 /*  motor.h
- *  
- *  function prototypes and constants related to the motor system.
- *  
- *  November 24, 2018
- */
+
+    function prototypes and constants related to the motor system.
+
+    November 24, 2018
+*/
 #ifndef _MOTOR_H
 #define _MOTOR_H
 
@@ -23,9 +23,10 @@ const int  MOTOR_MAX = 300, MOTOR_MIN = -300;
 const int  FLIP_MOTOR_DIR = -1;
 const bool SWAP_MOTORS = false;
 
+/* MOTOR CONTROL COMMAND TIMEOUT */
+const unsigned long DEADMAN_TIMEOUT_MS = 200;
 
-/* ENCODER CONSTANTS
-*/
+/* ENCODER CONSTANTS */
 const int16_t MAX_INT16 = 32767;
 const int16_t MIN_INT16 = -32768;
 const int16_t ENCODER_WIN_HIGH = MAX_INT16 * 0.7;
@@ -37,7 +38,6 @@ const bool SWAP_ENCODERS = true;
 
 /* MOTOR_PID PROTOTYPES */
 void doPID();
-
 
 /* MOTOR_HARDWARE PROTOTYPES */
 int debug_get_left_motor_power();
@@ -52,8 +52,7 @@ float get_left_wheel_target_velocity();
 float get_right_wheel_target_velocity();
 void set_twist_target(float linear_m_s, float angle_rad_s);
 
-/*!
-     \brief normalize
+/* normalize
 
      Normalizes the angle to be -M_PI circle to +M_PI circle
      It takes and returns radians.
@@ -61,7 +60,7 @@ void set_twist_target(float linear_m_s, float angle_rad_s);
 */
 double normalize_angle(double angle)
 {
-  double return_a = fmod(fmod(angle, 2.0*PI) + 2.0*PI, 2.0*PI);
+  double return_a = fmod(fmod(angle, 2.0 * PI) + 2.0 * PI, 2.0 * PI);
   if (return_a > PI)
     return_a -= 2.0 * PI;
   return return_a;

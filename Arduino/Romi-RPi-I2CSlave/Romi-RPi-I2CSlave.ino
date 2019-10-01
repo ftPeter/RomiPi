@@ -2,7 +2,25 @@
 #include <Romi32U4.h>
 #include <PololuRPiSlave.h>
 
-#define ROMI_FIRMWARE_VERSION (14)
+#define ROMI_FIRMWARE_VERSION (15)
+
+// remove comment mark to activate debug printouts
+//#define DBG_SRL TRUE
+
+/* Romi-RPi-I2CSlave
+ * 
+ * RomiPi, Romi 32u4 Control Board Firmware
+ * 
+ * Supports control of the RomiPi motors and sensors
+ * by ROS driver included in folder romipi_astar
+ * 
+ * version updated: July 13, 2019
+ * 
+ * TODO: 
+ *    * why is the watchdog triggering periodically?
+ *    * modify to control based on twist 
+ *      rather than on individual wheel velocity
+ */
 
 /* Pololu Romi Example Code included in here:
 
@@ -40,14 +58,15 @@ struct Data
   //uint16_t analog[4];
 
   // encoders sent to PI
-  bool resetEncoders; // 12
+  bool control_new_target; // 12
+  // encoders sent to PI
   int16_t leftEncoder, rightEncoder; // 13,14,  15,16
 
   // pose state sent to PI
   float pose_x, pose_y, pose_th_rad;     // 17,18,19,20,   21,22,23,24,   25,26,27,28,
   float pose_quat_z, pose_quat_w;   //  29,30,31,32,   33,34,35,36,
   float pose_twist_linear_x, pose_twist_angle_z; // 37,38,39,40,   41,42,43,44,
-  float pose_left_vel_target_meter_per_sec, pose_right_vel_target_meter_per_sec; //   45,46,47,48, 49,50,51,52,
+  float pose_left_vel_target_meter_per_sec, pose_right_vel_target_meter_per_sec; // 45,46,47,48,  49,50,51,52,
 
   // twist setting from PI
   float twist_linear_x, twist_angle_z; // 53,54,55,56,   57, 58, 59, 60
@@ -64,14 +83,16 @@ Romi32U4ButtonB buttonB;
 Romi32U4ButtonC buttonC;
 Romi32U4Encoders encoders;
 
-
-
 void setup()
 {
+#ifdef DBG_SRL
   Serial.begin(57600);
+  Serial.print("Romi-RPi-I2CSlave starting in debug mode. Version: ");
+  Serial.println(ROMI_FIRMWARE_VERSION);
+#endif
 
   // Set up the slave at I2C address 20.
-  // NOTE: the address of 20 below and 20 us delay above 
+  // NOTE: the address of 20 below and 20 us delay above
   //       are just a coincidence, not a typo.
   slave.init(20);
 
@@ -83,6 +104,11 @@ void setup()
   ledYellow(false);
   ledGreen(true);
   ledRed(false);
+
+  // start the watchdog timer
+  // this is seperate from the motor
+  // control deadman's handle timer
+  watchdog_init();
 }
 
 void loop()
@@ -90,10 +116,6 @@ void loop()
   // Call updateBuffer() before using the buffer, to get the latest
   // data including recent master writes.
   slave.updateBuffer();
-
-  // set twist sent from Raspberry Pi
-  set_twist_target(slave.buffer.twist_linear_x,
-                   slave.buffer.twist_angle_z);
 
   // Write various values into the data structure.
   slave.buffer.buttonA = buttonA.isPressed();
@@ -112,19 +134,17 @@ void loop()
                 slave.buffer.pixel_green,
                 slave.buffer.pixel_blue);
 
-  // update encoders
-  if (slave.buffer.resetEncoders)
-  { // reset and update encoder buffer
-    slave.buffer.resetEncoders = 0;
-    slave.buffer.leftEncoder   = encoders.getCountsAndResetLeft();
-    slave.buffer.rightEncoder  = encoders.getCountsAndResetRight();
-  } else {
-    // update encoder buffer without reset
-    slave.buffer.leftEncoder = hw_getencoder_left();
-    slave.buffer.rightEncoder = hw_getencoder_right();
-  }
+  // update buffer without reset
+  slave.buffer.leftEncoder = hw_getencoder_left();
+  slave.buffer.rightEncoder = hw_getencoder_right();
 
   if (everyNmillisec(10)) {
+    // update twist
+    // set twist sent from Raspberry Pi
+    set_twist_target(&(slave.buffer.twist_linear_x),
+                     &(slave.buffer.twist_angle_z),
+                     &(slave.buffer.control_new_target));
+
     // ODOMETRY
     calculateOdom();
     doPID();
@@ -133,8 +153,8 @@ void loop()
     slave.buffer.pose_x              = get_pose_x();
     slave.buffer.pose_y              = get_pose_y();
     slave.buffer.pose_th_rad         = get_pose_th_rad();
-    slave.buffer.pose_quat_z         = get_left_wheel_target_velocity(); //= get_pose_quat_z(); TODO DEBUG HACK
-    slave.buffer.pose_quat_w         = get_right_wheel_target_velocity();//= get_pose_quat_w(); TODO DEBUG HACK
+    slave.buffer.pose_quat_z         = get_pose_quat_z();
+    slave.buffer.pose_quat_w         = get_pose_quat_w();
     // measured twist
     slave.buffer.pose_twist_linear_x = get_pose_twist_linear();
     slave.buffer.pose_twist_angle_z  = get_pose_twist_angle();
@@ -142,16 +162,17 @@ void loop()
     slave.buffer.pose_left_vel_target_meter_per_sec  = get_instant_left_wheel_vel();
     slave.buffer.pose_right_vel_target_meter_per_sec = get_instant_right_wheel_vel();
 
-    
+    // reset watchdog timer
+    watchdog_reset();
   }
-      // READING the buffer is allowed before or after finalizeWrites().
+  // READING the buffer is allowed before or after finalizeWrites().
   // When you are done WRITING, call finalizeWrites() to make modified
   // data available to I2C master.
   slave.finalizeWrites();
 
-  // COMMENT THIS OUT AFTER DEBUG
-  if (every100millisec()) {
-    Serial.print("ODOMETRY DEBUG...");
+#ifdef DBG_SRL
+  if (DBGeveryNmillisec(500)) {
+    Serial.print("ODOM DBG...");
 
     Serial.print("L: ");
     Serial.print(get_instant_left_wheel_vel());
@@ -168,7 +189,7 @@ void loop()
     Serial.print(" m/s, "); Serial.print(get_pose_twist_angle());
     Serial.print("rad/s ).");
 
-    Serial.print("PID ");
+    Serial.print("PID wheel target vel ");
     Serial.print(get_left_wheel_target_velocity());
     Serial.print(", ");
     Serial.print(get_right_wheel_target_velocity());
@@ -176,5 +197,5 @@ void loop()
 
     Serial.println("");
   }
-
+#endif
 }
