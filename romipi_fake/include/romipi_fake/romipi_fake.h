@@ -36,7 +36,7 @@
 
 #include "romipi_fake.h"
 
-#define WHEEL_RADIUS                    0.2199115  // meter
+#define WHEEL_RADIUS                    0.035  // meter
 
 #define LEFT                            0
 #define RIGHT                           1
