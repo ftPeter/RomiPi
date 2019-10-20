@@ -26,6 +26,9 @@ from geometry_msgs.msg import PoseStamped
 from romipi_msgs.msg import RomiPose
 from visualization_msgs.msg import Marker, MarkerArray
 
+# CvBridge
+from cv_bridge import CvBridge
+
 # romipi specific marker dictionary and localization
 from romipi_fiducials.board_poser import BoardPoser
 
@@ -139,7 +142,7 @@ class FiducialsNode():
         board_marker = Marker()
         board_marker.header = header
 	board_marker.action = Marker.ADD
-	board_marker.header.frame_id = "/odom"
+	board_marker.header.frame_id = "/base_footprint"
 	FiducialsNode.pose_to_rospose(pose, board_marker.pose)
         # draw the target as a cylinder
         # (change to model or Octagon if possible?)
@@ -155,7 +158,7 @@ class FiducialsNode():
         arrow_marker = Marker()
         arrow_marker.header = header
 	arrow_marker.action = Marker.ADD
-	arrow_marker.header.frame_id = "/odom"
+	arrow_marker.header.frame_id = "/base_footprint"
 	FiducialsNode.pose_to_rospose(pose, arrow_marker.pose)
         # indicate orientation with arrow
 	arrow_marker.type = Marker.ARROW
@@ -203,7 +206,7 @@ class FiducialsNode():
             observer = self.this_robot_name 
             target_pose = board_pose_dict[target]
 
-            # TODO translate target pose from camera to odom world model
+            # TODO translate target pose from camera to base_footprint world model
             ros_pose = self.pose_to_romi_pose(observer, target, target_pose, frame_header)
             self.pose_publish.publish(ros_pose)
 

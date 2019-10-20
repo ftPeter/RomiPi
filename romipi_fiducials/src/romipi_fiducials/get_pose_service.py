@@ -54,3 +54,4 @@ class GetPoseService():
 if __name__ == "__main__":
     pose_server = GetPoseService()
     pose_server._test_pose_server()
+
