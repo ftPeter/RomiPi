@@ -19,6 +19,7 @@ class AStar:
     def __init__(self):
         # open I2C port
         self.bus = smbus.SMBus(1)
+        
         fw_version = self.read_firmware_version()
         if fw_version != 15:
             raise ValueError('Incorrect Romi Firmware Version Detected %d' % fw_version)
@@ -53,18 +54,18 @@ class AStar:
     def write_pack(self, address, format, *data):
         for i in range(2):
             try:
-                data_array = map(ord, list(struct.pack(format, *data)))
+                data_array = list(struct.pack(format, *data))
                 self.bus.write_i2c_block_data(20, address, data_array)
             except IOError:
                 write_fail_flag = True
                 print("IOError Detected: write_pack")
                 continue
             break
-        time.sleep(0.0001)
+        time.sleep(0.0001) 
 
     """
     Robot Commands
-    These methods send commandd to the robot
+    These methods send commandd to the robot 
     to take actions
     """
 
@@ -92,12 +93,12 @@ class AStar:
     these methods relate to estimated pose
     of the robot as measured by itself.
     """
-    def read_pose_motors(self):
+    def read_pose_motors(self): 
         """instantaneous velocity of (left,right) wheels in m/s
         """
         left, right = self.read_unpack(45, 8, 'ff')
         return (left, right)
-
+    
     def read_pose_twist(self):
         return self.read_unpack(37, 8, 'ff')
 
@@ -117,7 +118,7 @@ class AStar:
             return (None,None)
         left, right = encoder_values
         return (left, right)
-
+        
     def read_firmware_version(self):
         return self.read_unpack(0, 1, 'B')[0]
 
@@ -131,16 +132,16 @@ class AStar:
 
     def print_debug_info(self):
         print("== RomiPi Debug Info =============================")
-        print("Firmware Version: ", self.read_firmware_version())
-        print("Battery:          ", self.read_battery_millivolts(), " mV")
+        print(("Firmware Version: ", self.read_firmware_version()))
+        print(("Battery:          ", self.read_battery_millivolts(), " mV"))
         print( "Commands:")
-        print( "Encoders (l,r):  ", self.read_encoders())
-        print( "Commanded Twist (linear m/s, rotation rad/s: %0.1f, %0.1f" % self.read_twist())
+        print(( "Encoders (l,r):  ", self.read_encoders()))
+        print(( "Commanded Twist (linear m/s, rotation rad/s: %0.1f, %0.1f" % self.read_twist()))
         print( "Estimates:")
-        print( "Estimated Twist (linear m/s, rotation rad/s): %0.2f, %0.2f" % self.read_pose_twist())
-        print( "Estimated Pose (x m,y m, theta rad): %0.1f, %0.1f %0.1f" % self.read_pose_coordinate())
-        print( "Estimated wheel velocity (l,r): ", self.read_pose_motors())
-        print( "Estimated Quaternion (z,w): %0.2f, %0.2f" % self.read_quat())
+        print(( "Estimated Twist (linear m/s, rotation rad/s): %0.2f, %0.2f" % self.read_pose_twist()))
+        print(( "Estimated Pose (x m,y m, theta rad): %0.1f, %0.1f %0.1f" % self.read_pose_coordinate()))
+        print(( "Estimated wheel velocity (l,r): ", self.read_pose_motors()))
+        print(( "Estimated Quaternion (z,w): %0.2f, %0.2f" % self.read_quat()))
 
     def square(self):
         for i in range(4):
@@ -165,12 +166,12 @@ class AStar:
 if __name__ == '__main__':
     romi = AStar()
 #    romi.reset_encoders()
-    print("Firmware Version: ", romi.read_firmware_version())
-    print("Battery:          ", romi.read_battery_millivolts(), " mV")
-    print("Encoders (l,r):  ", romi.read_encoders() )
+    print(("Firmware Version: ", romi.read_firmware_version()))
+    print(("Battery:          ", romi.read_battery_millivolts(), " mV"))
+    print(("Encoders (l,r):  ", romi.read_encoders() ))
     try:
          romi.circle()
-
-    except:
+    
+    except: 
         pass
     romi.twist(0,0)
