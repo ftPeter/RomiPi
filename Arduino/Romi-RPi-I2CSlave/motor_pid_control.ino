@@ -30,7 +30,7 @@ float _pid_get_left_average_wheel_velocity() {
     i = 0;
   }
   for (int j = 0; j < _window_size; j++) {
-    average += _left_vel_window[i];
+    average += _left_vel_window[j];
   }
   average /= _window_size;
   return average;
@@ -48,7 +48,7 @@ float _pid_get_right_average_wheel_velocity() {
     i = 0;
   }
   for (int j = 0; j < _window_size; j++) {
-    average += _right_vel_window[i];
+    average += _right_vel_window[j];
   }
   average /= _window_size;
   return average;
