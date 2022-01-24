@@ -103,7 +103,7 @@
   <joint name="caster_back_joint" type="fixed">
     <parent link="base_link"/>
     <child link="caster_back_link"/>
-    <origin xyz="-0.0441 0 0.0" rpy="0 0 0"/>
+    <origin xyz="-0.0441 0.0435 0.0" rpy="0 0 0"/>
   </joint>
 
   <link name="caster_back_link">
