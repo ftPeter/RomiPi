@@ -25,7 +25,7 @@
   <!-- Interesting note about /odom topic: The below line spawns the robot in Gazebo and only after it is spawned, will Gazebo
    Provide /odom topic. The topic itself is configured romipi_florence/.../romipi_gazebo.xacro, which is referenced by
    $(find romipi_florence)/urdf/romipi_with_lidar_and_camera.urdf.xacro -->
-  <arg name="x_pos" default="-1.0"/>
+  <arg name="x_pos" default="-0.5"/>
   <arg name="y_pos" default="0.0"/>
   <arg name="z_pos" default="0.0"/>
   <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model romipi -param robot_description -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos)" respawn="false" output="screen" />

@@ -65,6 +65,8 @@
       <wheelAcceleration>1</wheelAcceleration>
       <wheelTorque>10</wheelTorque>
       <rosDebugLevel>na</rosDebugLevel>
+      <publishOdomTF>true</publishOdomTF>
+      <odometrySource>world</odometrySource>
       <odometryRate>20.0</odometryRate>
     </plugin>
   </gazebo>

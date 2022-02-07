@@ -28,11 +28,19 @@
     </collision>
 
     <inertial>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="0 0 0.0315" rpy="0 0 0"/>
       <mass value="8.2573504e-01"/>
-      <inertia ixx="2.2124416e-03" ixy="-1.2294101e-05" ixz="3.4938785e-05"
+      <!-- According to https://en.wikipedia.org/wiki/List_of_moments_of_inertia#List_of_3D_inertia_tensors 
+      We want Ixx = (1/12) * m * (h^2 + l^2) = 0.068811253 * (0.05^2 + 0.1635^2) = 0.002011508 = 2.011508e-03
+              Iyy = (1/12) * m * (w^2 + l^2) = 0.068811253 * (0.145^2 + 0.1635^2) = 0.003286236 = 3.286236e-03
+              Izz = (1/12) * m * (w^2 + h^2) = 0.068811253 * (0.145^2 + 0.05^2) = 0.001618785 = 1.618785e-03
+              -->
+      <!--inertia ixx="2.2124416e-03" ixy="-1.2294101e-05" ixz="3.4938785e-05"
                iyy="2.1193702e-03" iyz="-5.0120904e-06"
-               izz="2.0064271e-03" />
+               izz="2.0064271e-03" /-->
+      <inertia ixx="2.011508e-03" ixy="0" ixz="0"
+               iyy="3.286236e-03" iyz="0"
+               izz="1.618785e-03" />
     </inertial>
   </link>
 
@@ -55,16 +63,32 @@
     <collision>
       <origin xyz="0 0 0" rpy="1.57 0 0"/>
       <geometry>
+        <!--cylinder length="0.018" radius="0.0345"/-->
         <cylinder length="0.018" radius="0.0345"/>
       </geometry>
     </collision>
 
     <inertial>
-      <origin xyz="0 0 0" />
+      <origin xyz="0 0 0" rpy="1.57 0 0"/>
+      <geometry>
+        <!--cylinder length="0.018" radius="0.0345"/-->
+        <cylinder length="0.018" radius="0.0345"/>
+      </geometry>
       <mass value="2.8498940e-02" />
-      <inertia ixx="1.1175580e-05" ixy="-4.2369783e-11" ixz="-5.9381719e-09"
+      
+      <!-- According to https://en.wikipedia.org/wiki/List_of_moments_of_inertia#List_of_3D_inertia_tensors 
+      We want Ixx = (1/12) * m * (3*r^2 + h^2) = 0.002374912 * (3 * 0.0345^2 + 0.018^2) = 0.00000925 = 9.25e-06
+              Iyy = (1/12) * m * (3*r^2 + h^2) = 0.002374912 * (3 * 0.0345^2 + 0.018^2) = 0.00000925 = 9.25e-06
+              Izz = (1/2) * m * r^2 = 0.01424947 * 0.0345^2 = 0.00001696 = 1.696e-05
+              -->
+      
+      <!--inertia ixx="1.1175580e-05" ixy="-4.2369783e-11" ixz="-5.9381719e-09"
                iyy="1.1192413e-05" iyz="-1.4400107e-11"
-               izz="2.0712558e-05" />
+               izz="2.0712558e-05" /-->
+      
+      <inertia ixx="9.25e-06" ixy="0" ixz="0"
+               iyy="9.25e-06" iyz="0"
+               izz="1.696e-05" />
       </inertial>
   </link>
 
@@ -87,16 +111,28 @@
     <collision>
       <origin xyz="0 0 0" rpy="1.57 0 0"/>
       <geometry>
-        <cylinder length="0.018" radius="0.033"/>
+        <!--cylinder length="0.018" radius="0.033"/-->
+        <cylinder length="0.018" radius="0.0345"/>
       </geometry>
     </collision>
 
     <inertial>
-      <origin xyz="0 0 0" />
+      <origin xyz="0 0 0" rpy="1.57 0 0"/>
       <mass value="2.8498940e-02" />
-      <inertia ixx="1.1175580e-05" ixy="-4.2369783e-11" ixz="-5.9381719e-09"
+      
+      <!-- According to https://en.wikipedia.org/wiki/List_of_moments_of_inertia#List_of_3D_inertia_tensors 
+      We want Ixx = (1/12) * m * (3*r^2 + h^2) = 0.002374912 * (3 * 0.0345^2 + 0.018^2) = 0.00000925 = 9.25e-06
+              Iyy = (1/12) * m * (3*r^2 + h^2) = 0.002374912 * (3 * 0.0345^2 + 0.018^2) = 0.00000925 = 9.25e-06
+              Izz = (1/2) * m * r^2 = 0.01424947 * 0.0345^2 = 0.00001696 = 1.696e-05
+              -->
+      
+      <!--inertia ixx="1.1175580e-05" ixy="-4.2369783e-11" ixz="-5.9381719e-09"
                iyy="1.1192413e-05" iyz="-1.4400107e-11"
-               izz="2.0712558e-05" />
+               izz="2.0712558e-05" /-->
+      
+      <inertia ixx="9.25e-06" ixy="0" ixz="0"
+               iyy="9.25e-06" iyz="0"
+               izz="1.696e-05" />
       </inertial>
   </link>
 
@@ -116,18 +152,27 @@
     </visual>
 
     <collision>
-      <origin xyz="0 0.0 0.005" rpy="0 0 0"/>
+      <origin xyz="0.0 -0.045 0.005" rpy="0 0 0"/>
       <geometry>
-        <box size="0.030 0.02 0.01"/>
+        <box size="0.01 0.01 0.01"/>
       </geometry>
     </collision>
 
     <inertial>
       <origin xyz="0 0 0" />
-      <mass value="0.005" />
-      <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+      <mass value="0.0005" />      
+      <!-- According to https://en.wikipedia.org/wiki/List_of_moments_of_inertia#List_of_3D_inertia_tensors 
+      We want Ixx = (1/12) * m * (h^2 + l^2) = 0.000041667 * (0.01^2 + 0.01^2) = 0.000000008 = 8e-09
+              Iyy = (1/12) * m * (w^2 + l^2) = 0.000041667 * (0.01^2 + 0.01^2) = 0.000000008 = 8e-09
+              Izz = (1/12) * m * (w^2 + h^2) = 0.000041667 * (0.01^2 + 0.01^2) = 0.000000008 = 8e-09
+              -->
+      <!--inertia ixx="0.001" ixy="0.0" ixz="0.0"
                iyy="0.001" iyz="0.0"
-               izz="0.001" />
+               izz="0.001" /-->
+      
+      <inertia ixx="8e-09" ixy="0" ixz="0"
+               iyy="8e-09" iyz="0"
+               izz="8e-09" />
     </inertial>
   </link>
 
