@@ -1,22 +1,19 @@
 Panels:
   - Class: rviz/Displays
-    Help Height: 78
+    Help Height: 174
     Name: Displays
     Property Tree Widget:
       Expanded:
         - /Global Options1
         - /Status1
-        - /Grid1
-        - /Map1
-        - /RobotModel1
         - /LaserScan1
+        - /LaserScan1/Status1
         - /PoseArray1
         - /Path1
         - /Path2
         - /Map3
-        - /Map3/Status1
       Splitter Ratio: 0.5
-    Tree Height: 719
+    Tree Height: 623
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
