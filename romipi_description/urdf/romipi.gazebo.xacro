@@ -65,6 +65,9 @@
       <wheelAcceleration>1</wheelAcceleration>
       <wheelTorque>10</wheelTorque>
       <rosDebugLevel>na</rosDebugLevel>
+      <publishOdomTF>true</publishOdomTF>
+      <odometrySource>world</odometrySource>
+      <odometryRate>20.0</odometryRate>
     </plugin>
   </gazebo>
 
@@ -97,11 +100,28 @@
     </plugin>
   </gazebo>
 
-  <gazebo reference="base_scan">
+  <!-- ****** cameras ****** -->
+  <xacro:include filename="simple_camera.urdf.xacro" />
+
+  <xacro:simple_camera camera_name="camera1" parent_link="base_link" >
+    <origin xyz="0.03 0 0.06" rpy="0 0 0" />
+  </xacro:simple_camera>
+
+  <!-- ****** LiDAR ****** -->
+  <xacro:include filename="lidar.xacro" />
+
+  <!-- LIDAR -->
+  <xacro:lidar_device name="base_scan" parent="base_link" ros_topic="base_scan/scan">
+    <origin xyz="0.0 0.0 0.181" rpy="0 0 0" />
+  </xacro:lidar_device>
+
+  <!-- Lidar sensors -->
+  <gazebo reference="base_scan_link">
     <material>Gazebo/FlatBlack</material>
     <sensor type="ray" name="lds_lfcd_sensor">
       <pose>0 0 0 0 0 0</pose>
       <visualize>$(arg laser_visual)</visualize>
+      <update_rate>40</update_rate>
       <ray>
         <scan>
           <horizontal>
@@ -123,9 +143,8 @@
         </noise>
       </ray>
       <plugin name="gazebo_ros_lds_lfcd_controller" filename="libgazebo_ros_laser.so">
-        <topicName>scan</topicName>
-        <frameName>base_scan</frameName>
-        <update_rate>1800</update_rate>
+        <topicName>base_scan/scan</topicName>
+        <frameName>base_scan_link</frameName>
       </plugin>
     </sensor>
   </gazebo>

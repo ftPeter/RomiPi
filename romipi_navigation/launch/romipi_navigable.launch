@@ -1,0 +1,32 @@
+<launch>
+  <arg name="model" default="romipi" doc="model type Pololu Romi"/>
+
+  <!-- launching gazebo -->
+  <arg name="paused" default="false" doc="Starts gazebo in paused mode" />
+  <arg name="gui" default="true" doc="Starts gazebo gui" />
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" default="$(find romipi_gazebo)/worlds/romipi_world.world"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="gui" value="$(arg gui)"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+    <arg name="verbose" value="true"/>
+  </include>
+
+  <include file="$(find romipi_bringup)/launch/includes/description.launch.xml">
+    <arg name="model" value="$(arg model)" />
+  </include>
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    <param name="publish_frequency" type="double" value="50.0" />
+  </node>
+  
+  <!-- Interesting note about /odom topic: The below line spawns the robot in Gazebo and only after it is spawned, will Gazebo
+   Provide /odom topic. The topic itself is configured romipi_florence/.../romipi_gazebo.xacro, which is referenced by
+   $(find romipi_florence)/urdf/romipi_with_lidar_and_camera.urdf.xacro -->
+  <arg name="x_pos" default="-0.5"/>
+  <arg name="y_pos" default="0.0"/>
+  <arg name="z_pos" default="0.0"/>
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model romipi -param robot_description -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos)" respawn="false" output="screen" />
+</launch>
