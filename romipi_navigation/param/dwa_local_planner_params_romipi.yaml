@@ -37,7 +37,7 @@ DWAPlannerROS:
 # Trajectory Scoring Parameters
   path_distance_bias: 32.0
   goal_distance_bias: 20.0
-  occdist_scale: 0.02
+  occdist_scale: 0.2
   forward_point_distance: 0.325
   stop_time_buffer: 0.2
   scaling_speed: 0.25
@@ -49,3 +49,10 @@ DWAPlannerROS:
 # Debugging
   publish_traj_pc : true
   publish_cost_grid_pc: true
+
+# AE
+  static_map: false
+  rolling_window: true
+  width: 1
+  height: 1
+  resolution: 0.05
