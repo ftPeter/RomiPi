@@ -100,6 +100,13 @@
     </plugin>
   </gazebo>
 
+  <!-- ****** cameras ****** -->
+  <xacro:include filename="simple_camera.urdf.xacro" />
+
+  <xacro:simple_camera camera_name="camera1" parent_link="base_link" >
+    <origin xyz="0.03 0 0.06" rpy="0 0 0" />
+  </xacro:simple_camera>
+
   <!-- ****** LiDAR ****** -->
   <xacro:include filename="lidar.xacro" />
 
